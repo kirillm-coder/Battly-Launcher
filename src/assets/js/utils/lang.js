@@ -5,7 +5,7 @@
 
 class Lang {
   async GetLang() {
-    let langLocalStorage = localStorage.getItem("lang") ? localStorage.getItem("lang") : "en";
+    let langLocalStorage = localStorage.getItem("lang") ? localStorage.getItem("lang") : "it";
     
     try {
       const langModule = await import(`../../langs/${langLocalStorage}.js`);

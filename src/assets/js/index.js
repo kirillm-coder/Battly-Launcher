@@ -55,7 +55,7 @@ class Splash {
 	async startAnimation() {
 		let splashes = [{
 			"message": "Battly Launcher",
-			"author": "TECNO BROS"
+			"author": "OlimbosMC Studios"
 		},]
 		
 		let sonidoDB = localStorage.getItem("sonido-inicio") ? localStorage.getItem("sonido-inicio") : "start";
