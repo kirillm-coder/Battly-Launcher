@@ -12,7 +12,7 @@ const pkg = require('../package.json');
 const fetch = require('node-fetch');
 const axios = require("axios");
 
-const Swal = require("./assets/js/libs/sweetalert/sweetalert2.all.min.js");
+const Swal = require("./assets/js/libs/sweetalert/sweetalert2.all.min");
 const Toast = Swal.mixin({
     toast: true,
     position: "top-end",
@@ -30,7 +30,6 @@ let lang;
 
 const dataDirectory = process.env.APPDATA || (process.platform == 'darwin' ? `${process.env.HOME}/Library/Application Support` : process.env.HOME)
 import { Lang } from "../utils/lang.js";
-import { Alert } from "../utils/alert.js";
 
 class Friends {
     static id = "friends";
@@ -59,7 +58,6 @@ class Friends {
         ipcRenderer.send("socket", "getOnlineUsers", {});
 
         ipcRenderer.on("onlineUsers", (e, data) => {
-            console.log(data);
         });
 
         ipcRenderer.on('amigos', async (e, amigos_) => {
@@ -71,7 +69,7 @@ class Friends {
         let btnAddFriends = document.getElementById('add-friends');
         
         let uuid = (await this.database.get("1234", "accounts-selected")).value;
-        let account = this.database.getAccounts().find(account => account.uuid === uuid.selected);
+        let account = (await this.database.get(uuid.selected, "accounts")).value;
 
         btnAddFriends.addEventListener('click', (e) => {
             // Crear el elemento modal
@@ -93,7 +91,6 @@ class Friends {
             const modalTitle = document.createElement('p');
             modalTitle.className = 'modal-card-title';
             modalTitle.textContent = lang.add_friend_text;
-            modalTitle.style.color = 'white';
 
             const closeButton = document.createElement('button');
             closeButton.className = 'delete';
@@ -155,11 +152,10 @@ class Friends {
             searchButton.addEventListener('click', () => {
                 inputControl.classList.add('is-loading');
                 input.setAttribute('disabled', 'disabled');
-                searchButton.classList.add('is-loading');
 
                 users.innerHTML = '';
 
-                fetch('https://api.battlylauncher.com/api/users/buscarUsuarios', {
+                fetch('http://api.battlylauncher.com/api/users/buscarUsuarios', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -170,14 +166,9 @@ class Friends {
                 }).then(res => res.json()).then(async res => {
                     inputControl.classList.remove('is-loading');
                     input.removeAttribute('disabled');
-                    searchButton.classList.remove('is-loading');
 
                     if (res.error) {
                         console.error(res.error);
-                        new Alert().ShowAlert({
-                            icon: "error",
-                            title: lang.error_searching_users
-                        });
                         return;
                     }
 
@@ -211,10 +202,9 @@ class Friends {
                     
                     for (let user of res.usuarios) {
                         try {
-                            await axios.get(`https://api.battlylauncher.com/api/skin/${user}.png`)
+                            await axios.get(`http://api.battlylauncher.com/api/skin/${user}.png`)
                             const box = document.createElement('div');
                             box.className = 'box';
-                            box.style.padding = '0.75rem';
 
                             const mediaArticle = document.createElement('article');
                             mediaArticle.className = 'media';
@@ -224,19 +214,18 @@ class Friends {
 
                             // Crear la imagen dentro del visor de cara
                             const imgInsideFaceViewer = document.createElement('img');
-                            imgInsideFaceViewer.className = 'mc-face-viewer-5x';
+                            imgInsideFaceViewer.className = 'mc-face-viewer-8x';
 
                             mediaLeft.appendChild(imgInsideFaceViewer);
 
                             const mediaContent = document.createElement('div');
                             mediaContent.className = 'media-content';
-                            mediaContent.style.margin = '3 auto';
 
                             const content = document.createElement('div');
                             content.className = 'content';
 
                             const userParagraph = document.createElement('p');
-                            userParagraph.style.fontSize = '30px';
+                            userParagraph.style.fontSize = '20px';
                             userParagraph.textContent = user;
 
                             content.appendChild(userParagraph);
@@ -252,7 +241,6 @@ class Friends {
                             addButton.style.marginLeft = 'auto';
                             addButton.style.height = '30px';
                             addButton.style.width = '30px';
-                            addButton.style.margin = '5px auto';
 
                             const plusIcon = document.createElement('i');
                             plusIcon.className = 'fa-solid fa-plus';
@@ -266,7 +254,7 @@ class Friends {
 
                             box.appendChild(mediaArticle);
                             users.appendChild(box);
-                            imgInsideFaceViewer.style.backgroundImage = `url(https://api.battlylauncher.com/api/skin/${user}.png)`
+                            imgInsideFaceViewer.style.backgroundImage = `url(http://api.battlylauncher.com/api/skin/${user}.png)`
 
 
                             addButton.addEventListener('click', () =>
@@ -278,13 +266,13 @@ class Friends {
                                 }
                                 
                                 if (user == account.name) {
-                                    new Alert().ShowAlert({
+                                    Toast.fire({
                                         icon: "error",
                                         title: lang.you_cannot_add_yourself
                                     });
                                     return;
                                 } else if (amigosArray.includes(user)) {
-                                    new Alert().ShowAlert({
+                                    Toast.fire({
                                         icon: "error",
                                         title: lang.you_already_have_this_friend,
                                     });
@@ -296,7 +284,7 @@ class Friends {
                                         password: account.password
                                     });
 
-                                    new Alert().ShowAlert({
+                                    Toast.fire({
                                         icon: "success",
                                         title: `${lang.request_sent_to} ${user} ${lang.correctly}.`,
                                     });
@@ -307,7 +295,6 @@ class Friends {
                             console.log(`❌ Error al obtener la skin de ${user}.`);
                             const box = document.createElement('div');
                             box.className = 'box';
-                            box.style.padding = '0.75rem';
 
                             const mediaArticle = document.createElement('article');
                             mediaArticle.className = 'media';
@@ -317,19 +304,18 @@ class Friends {
 
                             // Crear la imagen dentro del visor de cara
                             const imgInsideFaceViewer = document.createElement('img');
-                            imgInsideFaceViewer.className = 'mc-face-viewer-5x';
+                            imgInsideFaceViewer.className = 'mc-face-viewer-8x';
 
                             mediaLeft.appendChild(imgInsideFaceViewer);
 
                             const mediaContent = document.createElement('div');
                             mediaContent.className = 'media-content';
-                            mediaContent.style.margin = '3 auto';
 
                             const content = document.createElement('div');
                             content.className = 'content';
 
                             const userParagraph = document.createElement('p');
-                            userParagraph.style.fontSize = '30px';
+                            userParagraph.style.fontSize = '20px';
                             userParagraph.textContent = user;
 
                             content.appendChild(userParagraph);
@@ -345,7 +331,6 @@ class Friends {
                             addButton.style.marginLeft = 'auto';
                             addButton.style.height = '30px';
                             addButton.style.width = '30px';
-                            addButton.style.margin = '5px auto';
 
                             const plusIcon = document.createElement('i');
                             plusIcon.className = 'fa-solid fa-plus';
@@ -370,13 +355,13 @@ class Friends {
                                 }
                                 
                                 if (user == account.name) {
-                                    new Alert().ShowAlert({
+                                    Toast.fire({
                                         icon: "error",
                                         title: lang.you_cannot_add_yourself
                                     });
                                     return;
                                 } else if (amigosArray.includes(user)) {
-                                    new Alert().ShowAlert({
+                                    Toast.fire({
                                         icon: "error",
                                         title: lang.you_already_have_this_friend,
                                     });
@@ -388,7 +373,7 @@ class Friends {
                                         password: account.password
                                     });
 
-                                    new Alert().ShowAlert({
+                                    Toast.fire({
                                         icon: "success",
                                         title: `${lang.request_sent_to} ${user} ${lang.correctly}.`,
                                     });
@@ -412,8 +397,7 @@ class Friends {
     async Solicitudes() {
         let btnSolicitudes = document.getElementById('solicitudes');
         let uuid = (await this.database.get("1234", "accounts-selected")).value;
-        let account = this.database.getAccounts().find(account => account.uuid === uuid.selected);
-        console.log(account);
+        let account = (await this.database.get(uuid.selected, "accounts")).value;
 
         // Definir la función del evento fuera del addEventListener
         const handleSolicitudesClick = async (e) => {
@@ -436,7 +420,6 @@ class Friends {
             const modalTitle = document.createElement('p');
             modalTitle.className = 'modal-card-title';
             modalTitle.textContent = lang.friend_requests;
-            modalTitle.style.color = 'white';
 
             const closeButton = document.createElement('button');
             closeButton.className = 'delete';
@@ -462,7 +445,6 @@ class Friends {
                 if (solicitudes.enviadas.length == 0 && solicitudes.recibidas.length == 0) {
                     const box = document.createElement('div');
                     box.className = 'box';
-                    box.style.padding = '0.75rem';
 
                     const article = document.createElement('article');
                     article.className = 'media';
@@ -471,20 +453,18 @@ class Friends {
                     mediaLeft.className = 'media-left';
 
                     const img = document.createElement('img');
-                    img.className = 'mc-face-viewer-5x';
+                    img.className = 'mc-face-viewer-8x';
                     mediaLeft.appendChild(img);
 
                     const mediaContent = document.createElement('div');
                     mediaContent.className = 'media-content';
-                    mediaContent.style.margin = '3 auto';
 
                     const content = document.createElement('div');
                     content.className = 'content';
 
                     const userParagraph = document.createElement('p');
-                    userParagraph.style.fontSize = '30px';
+                    userParagraph.style.fontSize = '20px';
                     userParagraph.textContent = lang.you_dont_have_any_friend_requests;
-                    modalTitle.textContent = lang.you_dont_have_any_friend_requests;
 
                     content.appendChild(userParagraph);
                     mediaContent.appendChild(content);
@@ -501,11 +481,10 @@ class Friends {
 
                 for (let solicitud of solicitudes.recibidas) {
                     try {
-                        await axios.get(`https://api.battlylauncher.com/api/skin/${solicitud}.png`)
+                        await axios.get(`http://api.battlylauncher.com/api/skin/${solicitud}.png`)
 
                         const box1 = document.createElement('div');
                         box1.className = 'box';
-                        box1.style.padding = '0.75rem';
 
                         const article1 = document.createElement('article');
                         article1.className = 'media';
@@ -514,19 +493,18 @@ class Friends {
                         mediaLeft1.className = 'media-left';
 
                         const img1 = document.createElement('img');
-                        img1.className = 'mc-face-viewer-5x';
+                        img1.className = 'mc-face-viewer-8x';
 
                         mediaLeft1.appendChild(img1);
 
                         const mediaContent1 = document.createElement('div');
                         mediaContent1.className = 'media-content';
-                        mediaContent1.style.margin = '3 auto';
 
                         const content1 = document.createElement('div');
                         content1.className = 'content';
 
                         const userParagraph1 = document.createElement('p');
-                        userParagraph1.style.fontSize = '30px';
+                        userParagraph1.style.fontSize = '20px';
                         userParagraph1.textContent = solicitud;
 
                         content1.appendChild(userParagraph1);
@@ -542,7 +520,6 @@ class Friends {
                         acceptButton1.className = 'button is-success is-square';
                         acceptButton1.style.height = '30px';
                         acceptButton1.style.width = '10px';
-                        acceptButton1.style.margin = '5px auto';
 
                         const acceptIcon1 = document.createElement('i');
                         acceptIcon1.className = 'fa-solid fa-check';
@@ -555,7 +532,6 @@ class Friends {
                         rejectButton1.style.height = '30px';
                         rejectButton1.style.width = '10px';
                         rejectButton1.style.marginTop = '5px';
-                        rejectButton1.style.margin = '5px auto';
 
                         const rejectIcon1 = document.createElement('i');
                         rejectIcon1.className = 'fa-solid fa-xmark';
@@ -570,7 +546,7 @@ class Friends {
                         box1.appendChild(article1);
 
                         modalBody.appendChild(box1);
-                        img1.style.backgroundImage = "url('https://api.battlylauncher.com/api/skin/" + solicitud + ".png')";
+                        img1.style.backgroundImage = "url('http://api.battlylauncher.com/api/skin/" + solicitud + ".png')";
 
 
                         closeButton.addEventListener('click', () => {
@@ -584,7 +560,7 @@ class Friends {
                                 password: account.password
                             });
 
-                            new Alert().ShowAlert({
+                            Toast.fire({
                                 icon: "success",
                                 title: lang.request_accepted
                             });
@@ -599,7 +575,7 @@ class Friends {
                                 password: account.password
                             });
 
-                            new Alert().ShowAlert({
+                            Toast.fire({
                                 icon: "success",
                                 title: lang.request_rejected
                             });
@@ -607,10 +583,9 @@ class Friends {
                             modal.remove();
                         });
                     } catch (error) {
-                            console.log(`❌ Error al obtener la skin de ${solicitud}.`);
+                            console.log(`❌ Error al obtener la skin de ${user}.`);
                         const box1 = document.createElement('div');
                         box1.className = 'box';
-                        box1.style.padding = '0.75rem';
 
                         const article1 = document.createElement('article');
                         article1.className = 'media';
@@ -619,19 +594,18 @@ class Friends {
                         mediaLeft1.className = 'media-left';
 
                         const img1 = document.createElement('img');
-                        img1.className = 'mc-face-viewer-5x';
+                        img1.className = 'mc-face-viewer-8x';
 
                         mediaLeft1.appendChild(img1);
 
                         const mediaContent1 = document.createElement('div');
                         mediaContent1.className = 'media-content';
-                        mediaContent1.style.margin = '3 auto';
 
                         const content1 = document.createElement('div');
                         content1.className = 'content';
 
                         const userParagraph1 = document.createElement('p');
-                        userParagraph1.style.fontSize = '30px';
+                        userParagraph1.style.fontSize = '20px';
                         userParagraph1.textContent = solicitud;
 
                         content1.appendChild(userParagraph1);
@@ -647,7 +621,6 @@ class Friends {
                         acceptButton1.className = 'button is-success is-square';
                         acceptButton1.style.height = '30px';
                         acceptButton1.style.width = '10px';
-                        acceptButton1.style.margin = '5px auto';
 
                         const acceptIcon1 = document.createElement('i');
                         acceptIcon1.className = 'fa-solid fa-check';
@@ -660,7 +633,6 @@ class Friends {
                         rejectButton1.style.height = '30px';
                         rejectButton1.style.width = '10px';
                         rejectButton1.style.marginTop = '5px';
-                        rejectButton1.style.margin = '5px auto';
 
                         const rejectIcon1 = document.createElement('i');
                         rejectIcon1.className = 'fa-solid fa-xmark';
@@ -689,7 +661,7 @@ class Friends {
                                 password: account.password
                             });
 
-                            new Alert().ShowAlert({
+                            Toast.fire({
                                 icon: "success",
                                 title: lang.request_accepted
                             });
@@ -704,7 +676,7 @@ class Friends {
                                 password: account.password
                             });
 
-                            new Alert().ShowAlert({
+                            Toast.fire({
                                 icon: "success",
                                 title: lang.request_rejected
                             });
@@ -716,12 +688,11 @@ class Friends {
 
                 for (let solicitud of solicitudes.enviadas) {
                     try {
-                        await axios.get(`https://api.battlylauncher.com/api/skin/${solicitud}.png`)
+                        await axios.get(`http://api.battlylauncher.com/api/skin/${solicitud}.png`)
                     
                         // Crear el segundo cuadro de solicitud
                         const box2 = document.createElement('div');
                         box2.className = 'box';
-                        box2.style.padding = '0.75rem';
 
                         const article2 = document.createElement('article');
                         article2.className = 'media';
@@ -730,19 +701,18 @@ class Friends {
                         mediaLeft2.className = 'media-left';
 
                         const img2 = document.createElement('img');
-                        img2.className = 'mc-face-viewer-5x';
+                        img2.className = 'mc-face-viewer-8x';
 
                         mediaLeft2.appendChild(img2);
 
                         const mediaContent2 = document.createElement('div');
                         mediaContent2.className = 'media-content';
-                        mediaContent2.style.margin = '3 auto';
 
                         const content2 = document.createElement('div');
                         content2.className = 'content';
 
                         const userParagraph2 = document.createElement('p');
-                        userParagraph2.style.fontSize = '30px';
+                        userParagraph2.style.fontSize = '20px';
                         userParagraph2.textContent = solicitud;
 
                         content2.appendChild(userParagraph2);
@@ -759,7 +729,6 @@ class Friends {
                         rejectButton2.style.height = '30px';
                         rejectButton2.style.width = '10px';
                         rejectButton2.style.marginTop = '5px';
-                        rejectButton2.style.margin = '5px auto';
 
                         const rejectIcon2 = document.createElement('i');
                         rejectIcon2.className = 'fa-solid fa-ban';
@@ -774,13 +743,12 @@ class Friends {
                         box2.appendChild(article2);
 
                         modalBody.appendChild(box2);
-                        img2.style.backgroundImage = "url('https://api.battlylauncher.com/api/skin/" + solicitud + ".png')";
+                        img2.style.backgroundImage = "url('http://api.battlylauncher.com/api/skin/" + solicitud + ".png')";
                     } catch (error) {
-                            console.log(`❌ Error al obtener la skin de ${solicitud}.`);
+                            console.log(`❌ Error al obtener la skin de ${user}.`);
                         // Crear el segundo cuadro de solicitud
                         const box2 = document.createElement('div');
                         box2.className = 'box';
-                        box2.style.padding = '0.75rem';
 
                         const article2 = document.createElement('article');
                         article2.className = 'media';
@@ -789,19 +757,18 @@ class Friends {
                         mediaLeft2.className = 'media-left';
 
                         const img2 = document.createElement('img');
-                        img2.className = 'mc-face-viewer-5x';
+                        img2.className = 'mc-face-viewer-8x';
 
                         mediaLeft2.appendChild(img2);
 
                         const mediaContent2 = document.createElement('div');
                         mediaContent2.className = 'media-content';
-                        mediaContent2.style.margin = '3 auto';
 
                         const content2 = document.createElement('div');
                         content2.className = 'content';
 
                         const userParagraph2 = document.createElement('p');
-                        userParagraph2.style.fontSize = '30px';
+                        userParagraph2.style.fontSize = '20px';
                         userParagraph2.textContent = solicitud;
 
                         content2.appendChild(userParagraph2);
@@ -818,7 +785,6 @@ class Friends {
                         rejectButton2.style.height = '30px';
                         rejectButton2.style.width = '10px';
                         rejectButton2.style.marginTop = '5px';
-                        rejectButton2.style.margin = '5px auto';
 
                         const rejectIcon2 = document.createElement('i');
                         rejectIcon2.className = 'fa-solid fa-ban';
@@ -862,6 +828,8 @@ class Friends {
 
     async ObtenerAmigos() {
         let btnAmigos = document.getElementById('friends-btn');
+        let uuid = (await this.database.get("1234", "accounts-selected")).value;
+        let account = (await this.database.get(uuid.selected, "accounts")).value;
 
         let panelAmigos = document.getElementById('lista-de-amigos');
 
@@ -869,11 +837,9 @@ class Friends {
 
         // Definir la función del evento fuera del addEventListener
         btnAmigos.addEventListener('click', async (e) => {
-            let uuid = (await this.database.get("1234", "accounts-selected")).value;
-            let account = this.database.getAccounts().find(account => account.uuid === uuid.selected);
-            
             panelAmigos.innerHTML = '';
         
+            document.querySelector(".preload-content").style.display = "block";
             const loadingText = document.getElementById("loading-text");
             loadingText.innerHTML = lang.loading_friends;
 
@@ -887,7 +853,6 @@ class Friends {
                     console.log('❌ Error al obtener la lista de amigos. Comprueba tu conexión a internet y vuelve a intentarlo más tarde.');
                     const box = document.createElement('div');
                     box.className = 'box';
-                    box.style.margin = '0 auto';
 
                     const article = document.createElement('article');
                     article.className = 'media';
@@ -919,6 +884,8 @@ class Friends {
                     box.appendChild(article);
 
                     panelAmigos.appendChild(box);
+
+                    document.querySelector(".preload-content").style.display = "none";
                 }
             }, 10000);
 
@@ -934,11 +901,17 @@ class Friends {
             if (amigos.length == 0) {
                 const box = document.createElement('div');
                 box.className = 'box';
-                    box.className = 'box';
-                    box.style.margin = '0 auto';
 
                 const article = document.createElement('article');
                 article.className = 'media';
+
+                const mediaLeft = document.createElement('div');
+                mediaLeft.className = 'media-left';
+
+                const img = document.createElement('div');
+                img.className = 'mc-face-viewer-8x';
+                img.style.backgroundImage = "url('https://minotar.net/skin/MHF_Steve.png')";
+                mediaLeft.appendChild(img);
 
                 const mediaContent = document.createElement('div');
                 mediaContent.className = 'media-content';
@@ -946,32 +919,21 @@ class Friends {
                 const content = document.createElement('div');
                 content.className = 'content';
 
-                let texts = [
-                    lang.you_dont_have_friends_1,
-                    lang.you_dont_have_friends_2,
-                    lang.you_dont_have_friends_3,
-                    lang.you_dont_have_friends_4,
-                    lang.you_dont_have_friends_5,
-                    lang.you_dont_have_friends_6,
-                    lang.you_dont_have_friends_7,
-                    lang.you_dont_have_friends_8,
-                ]
-
-                let randomText = texts[Math.floor(Math.random() * texts.length)];
-
                 const userParagraph = document.createElement('p');
                 userParagraph.style.fontSize = '20px';
-                userParagraph.textContent = randomText;
+                userParagraph.textContent = 'No tienes amigos';
 
                 content.appendChild(userParagraph);
                 mediaContent.appendChild(content);
-                
+
+                article.appendChild(mediaLeft);
                 article.appendChild(mediaContent);
 
                 box.appendChild(article);
 
                 panelAmigos.appendChild(box);
 
+                document.querySelector(".preload-content").style.display = "none";
             }
 
             //ordenar los amigos para mostrar los que están ausentes, online y offline
@@ -1009,7 +971,7 @@ class Friends {
 
                 if (status === "online") {
                     try {
-                        await axios.get(`https://api.battlylauncher.com/api/skin/${username}.png`)
+                        await axios.get(`http://api.battlylauncher.com/api/skin/${username}.png`)
 
                     
                         const box = document.createElement('div');
@@ -1020,8 +982,6 @@ class Friends {
 
                         const mediaLeft = document.createElement('div');
                         mediaLeft.className = 'media-left';
-                            mediaLeft.style.marginRight = '-1rem';
-                            mediaLeft.style.marginLeft = '-2rem';
 
                         const figure = document.createElement('figure');
                         figure.className = 'image is-64x64';
@@ -1087,7 +1047,7 @@ class Friends {
                         box.appendChild(article);
 
                         panelAmigos.appendChild(box);
-                        img.style.backgroundImage = `url('https://api.battlylauncher.com/api/skin/${username}.png')`;
+                        img.style.backgroundImage = `url('http://api.battlylauncher.com/api/skin/${username}.png')`;
 
                     } catch (error) {
                             console.log(`❌ Error al obtener la skin de ${username}.`);
@@ -1100,8 +1060,6 @@ class Friends {
 
                         const mediaLeft = document.createElement('div');
                         mediaLeft.className = 'media-left';
-                            mediaLeft.style.marginRight = '-1rem';
-                            mediaLeft.style.marginLeft = '-2rem';
 
                         const figure = document.createElement('figure');
                         figure.className = 'image is-64x64';
@@ -1177,41 +1135,41 @@ class Friends {
 
                     if (details.includes("Forge")) {
                         version = "Forge";
-                        icon = "./assets/images/icons/forge.png";
+                        icon = "https://pbs.twimg.com/profile_images/778706890914095109/fhMDH9o6_400x400.jpg";
                     } else if (details.includes("Fabric")) {
                         version = "Fabric";
-                        icon = "./assets/images/icons/fabric.png";
+                        icon = "https://battlylauncher.com/assets/img/fabric.png";
                     } else if (details.includes("Quilt")) {
                         version = "Quilt";
-                        icon = "./assets/images/icons/quilt.png";
+                        icon = "https://battlylauncher.com/assets/img/quilt.png";
                     } else if (details.includes("OptiFine")) {
                         version = "OptiFine";
-                        icon = "./assets/images/icons/optifine.png";
+                        icon = "https://cdn.discordapp.com/attachments/933698201486237716/1170390085561237674/OptiFine_Logo.webp";
                     } else if (details.includes("Vanilla")) {
                         version = "Vanilla";
-                        icon = "./assets/images/icons/minecraft.png";
+                        icon = "https://battlylauncher.com/assets/img/vanilla.png";
                     } else if (details.includes("LabyMod")) {
                         version = "LabyMod";
                         icon = "https://battlylauncher.com/assets/img/labymod.png";
                     } else if (details.includes("CMPack")) {
                         version = "CMPack";
-                        icon = "./assets/images/icons/cmpack.png";
+                        icon = "https://battlylauncher.com/assets/img/cmpack.png";
                     } else if (details.includes("Ares")) {
                         version = "Ares";
-                        icon = "./assets/images/icons/ares.png";
+                        icon = "https://battlylauncher.com/assets/img/ares.png";
                     } else if (details.includes("BatMod")) {
                         version = "BatMod";
-                        icon = "./assets/images/icons/batmod.png";
+                        icon = "https://battlylauncher.com/assets/img/batmod.png";
                     } else if (details.includes("Battly")) {
                         version = "Battly";
-                        icon = "./assets/images/icon.png";
+                        icon = "https://battlylauncher.com/assets/img/logo_500.png";
                     } else {
                         version = "Desconocida";
-                        icon = "./assets/images/icons/minecraft.png";
+                        icon = "https://battlylauncher.com/assets/img/logo_500.png";
                     }
 
                     try {
-                        await axios.get(`https://api.battlylauncher.com/api/skin/${username}.png`)
+                        await axios.get(`http://api.battlylauncher.com/api/skin/${username}.png`)
 
                         const box = document.createElement('div');
                         box.className = 'box friend-card';
@@ -1221,8 +1179,6 @@ class Friends {
 
                         const mediaLeft = document.createElement('div');
                         mediaLeft.className = 'media-left';
-                            mediaLeft.style.marginRight = '-1rem';
-                            mediaLeft.style.marginLeft = '-2rem';
 
                         const figure = document.createElement('figure');
                         figure.className = 'image is-64x64';
@@ -1287,7 +1243,7 @@ class Friends {
                         box.appendChild(article);
 
                         panelAmigos.appendChild(box);
-                        img.style.backgroundImage = `url('https://api.battlylauncher.com/api/skin/${username}.png')`;
+                        img.style.backgroundImage = `url('http://api.battlylauncher.com/api/skin/${username}.png')`;
                     } catch (error) {
                             console.log(`❌ Error al obtener la skin de ${username}.`);
                         const box = document.createElement('div');
@@ -1298,8 +1254,6 @@ class Friends {
 
                         const mediaLeft = document.createElement('div');
                         mediaLeft.className = 'media-left';
-                            mediaLeft.style.marginRight = '-1rem';
-                            mediaLeft.style.marginLeft = '-2rem';
 
                         const figure = document.createElement('figure');
                         figure.className = 'image is-64x64';
@@ -1369,7 +1323,7 @@ class Friends {
 
                 } else {                    
                     try {
-                        await axios.get(`https://api.battlylauncher.com/api/skin/${username}.png`)
+                        await axios.get(`http://api.battlylauncher.com/api/skin/${username}.png`)
                     
                         const box = document.createElement('div');
                         box.className = 'box friend-card';
@@ -1379,8 +1333,6 @@ class Friends {
 
                         const mediaLeft = document.createElement('div');
                         mediaLeft.className = 'media-left';
-                            mediaLeft.style.marginRight = '-1rem';
-                            mediaLeft.style.marginLeft = '-2rem';
 
                         const figure = document.createElement('figure');
                         figure.className = 'image is-64x64';
@@ -1434,7 +1386,7 @@ class Friends {
                         box.appendChild(article);
 
                         panelAmigos.appendChild(box);
-                        img.style.backgroundImage = `url('https://api.battlylauncher.com/api/skin/${username}.png')`;
+                        img.style.backgroundImage = `url('http://api.battlylauncher.com/api/skin/${username}.png')`;
                     }
                     
                     catch (error) {
@@ -1447,8 +1399,6 @@ class Friends {
 
                         const mediaLeft = document.createElement('div');
                         mediaLeft.className = 'media-left';
-                            mediaLeft.style.marginRight = '-1rem';
-                            mediaLeft.style.marginLeft = '-2rem';
 
                         const figure = document.createElement('figure');
                         figure.className = 'image is-64x64';
@@ -1505,6 +1455,8 @@ class Friends {
                         img.style.backgroundImage = `url('https://minotar.net/skin/MHF_Steve.png')`;
                     }
                 }
+
+                document.querySelector(".preload-content").style.display = "none";
             }
         });
     }

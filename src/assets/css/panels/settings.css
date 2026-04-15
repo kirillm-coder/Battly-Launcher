@@ -88,10 +88,6 @@
     pointer-events: none;
 }
 
-.not-pointer-events {
-    pointer-events: none;
-}
-
 .active-tab-content {
     opacity: 1;
     pointer-events: all;
@@ -208,6 +204,7 @@
     white-space: nowrap;
     overflow: hidden;
     max-width: 29ch;
+    pointer-events: none;
 }
 
 .account-uuid {

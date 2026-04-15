@@ -11,8 +11,6 @@ const os_1 = __importDefault(require("os"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
-const events_1 = require("events");
-
 class java {
     constructor(options) {
         this.options = options;

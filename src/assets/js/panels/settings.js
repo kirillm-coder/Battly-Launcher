@@ -15,8 +15,7 @@ import {
     Slider
 } from '../utils.js';
 const dataDirectory = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME)
-const Swal = require("./assets/js/libs/sweetalert/sweetalert2.all.min.js");
-
+const Swal = require('./assets/js/libs/sweetalert/sweetalert2.all.min');
 
 const os = require('os');
 const Toast = Swal.mixin({
@@ -32,7 +31,6 @@ const Toast = Swal.mixin({
 })
 
 import { Lang } from "../utils/lang.js";
-import { Alert } from "../utils/alert.js";
 let lang;
 
 class Settings {
@@ -50,26 +48,19 @@ class Settings {
         this.Java();
     }
 
-    async initTheme() {
+    initTheme() {
         let color = document.getElementById("theme-color");
         let color_db = localStorage.getItem("theme-color");
-        let colorHover_db = localStorage.getItem("theme-color-hover");
         let color_bottom_bar = document.getElementById("theme-color-bottom-bar");
         let color_bottom_bar_db = localStorage.getItem("theme-color-bottom-bar");
         let opacity = document.getElementById("theme-opacity-bottom-bar");
         let opacity_db = localStorage.getItem("theme-opacity-bottom-bar");
-        let background_loading_screen_color = localStorage.getItem("background-loading-screen-color");
 
         if (color_db) {
             color.value = color_db;
         } else {
             color.value = "#3e8ed0";
             localStorage.setItem("theme-color", "#3e8ed0");
-        }
-
-        if (colorHover_db) {
-        } else {
-            localStorage.setItem("theme-color-hover", tinycolor(color.value).darken(10).toString());
         }
 
         if (color_bottom_bar_db) {
@@ -86,21 +77,10 @@ class Settings {
             localStorage.setItem("theme-opacity-bottom-bar", "1");
         }
 
-        if (background_loading_screen_color) {
-            document.getElementById("theme-color-loading-screen").value = background_loading_screen_color;
-        } else {
-            document.getElementById("theme-color-loading-screen").value = "#3498db";
-            localStorage.setItem("background-loading-screen-color", "#3498db");
-        }
-
-
-
-        document.getElementById("theme-opacity-bottom-bar").addEventListener("input", (e) => {
+        document.getElementById("theme-opacity-bottom-bar").addEventListener("change", (e) => {
             localStorage.setItem("theme-opacity-bottom-bar", e.target.value);
-            let bottom_bar = document.querySelectorAll(".bottom_bar");
-            bottom_bar.forEach((bar) => {
-                bar.style.opacity = e.target.value;
-            });
+            let bottom_bar = document.querySelector(".bottom_bar");
+            bottom_bar.style.opacity = e.target.value;
 
             let bottom_bar_settings = document.querySelector(".bottom_bar_settings");
             bottom_bar_settings.style.opacity = e.target.value;
@@ -109,21 +89,19 @@ class Settings {
             bottom_bar_mods.style.opacity = e.target.value;
         });
 
-        document.getElementById("theme-color-bottom-bar").addEventListener("input", (e) => {
+        document.getElementById("theme-color-bottom-bar").addEventListener("change", (e) => {
             localStorage.setItem("theme-color-bottom-bar", e.target.value);
-            let bottom_bar = document.querySelectorAll(".bottom_bar");
-            bottom_bar.forEach((bar) => {
-                bar.style.backgroundColor = e.target.value;
-            });
+            let bottom_bar = document.querySelector(".bottom_bar");
+            bottom_bar.style.backgroundColor = e.target.value;
 
             let bottom_bar_settings = document.querySelector(".bottom_bar_settings");
-            let bottom_bar_mods = document.querySelector(".bottom_bar_mods");
-            
             bottom_bar_settings.style.backgroundColor = e.target.value;
+
+            let bottom_bar_mods = document.querySelector(".bottom_bar_mods");
             bottom_bar_mods.style.backgroundColor = e.target.value;
         });
 
-        document.getElementById("theme-color").addEventListener("input", (e) => {
+        document.getElementById("theme-color").addEventListener("change", (e) => {
             localStorage.setItem("theme-color", e.target.value);
             let buttons = document.querySelectorAll(".button");
             let btns = document.querySelectorAll(".btn");
@@ -170,8 +148,6 @@ class Settings {
             select_selected_span.forEach((select_selected_span) => {
                 select_selected_span.style.backgroundColor = e.target.value;
             });
-
-            localStorage.setItem("theme-color-hover", tinycolor(e.target.value).darken(10).toString());
         });
 
 
@@ -179,16 +155,9 @@ class Settings {
             const body = document.querySelector("body");
             body.style.background = "linear-gradient(#00000066, #00000066), black url('./assets/images/background/light.jpg') no-repeat center center fixed";
 
-            const video = document.getElementById("video-background");
-            const source = video.querySelector('source');
-
-            source.src = "";
-            video.load();
-
             localStorage.removeItem("background-img");
-            localStorage.removeItem("background-video");
 
-            new Alert().ShowAlert({
+            Toast.fire({
                 title: lang.background_set_successfully,
                 icon: "success",
             });
@@ -196,81 +165,7 @@ class Settings {
 
         document.getElementById("obtener-socketid").addEventListener("click", e => {
             ipcRenderer.send("obtenerSocketID");
-        });
-
-
-        document.querySelector(".memory-slider").max = /* la RAM total del sistema */ Math.trunc(os.totalmem() / 1073741824 * 10) / 10;
-
-        document.getElementById("theme-color-loading-screen").addEventListener("change", (e) => {
-            localStorage.setItem("background-loading-screen-color", e.target.value);
-
-            let rectangulos = document.querySelectorAll('.rectangulo');
-            
-            rectangulos.forEach((rectangulo, index) => {
-                rectangulo.style.backgroundColor = e.target.value;
-            });
-
-        });
-
-        
-        document.getElementById("background-btn").addEventListener("click", async (e) => {
-            let uuid = (await this.database.get("1234", "accounts-selected")).value;
-            let account = this.database.getAccounts().find(account => account.uuid === uuid.selected);
-            let isPremium;
-
-            const accountDiv = document.getElementById(account.uuid);
-            const accountName = accountDiv.querySelector('.account-name');
-            if (accountName.querySelector('.fa-fire')) {
-                isPremium = true;
-                document.getElementById("animated-background-div").style.display = "";
-                document.getElementById("not-animated-background-div").style.display = "none";
-            } else {
-                isPremium = false;
-                document.getElementById("not-animated-background-div").style.display = "";
-                document.getElementById("animated-background-div").style.display = "none";
-            }
-        });
-
-        document.getElementById("resize-background-select").addEventListener("change", (e) => {
-            console.log(e.target.value);
-            if (e.target.value === "static-background") {
-                document.getElementById("background-input").click();
-            } else if (e.target.value === "animated-background") {
-                document.getElementById("background-input-file").click();
-            }
-        });
-
-        document.getElementById("background-input-file").addEventListener("change", (e) => {
-            console.log(e.target.files[0]);
-            let file = e.target.files[0];
-
-            //si no acaba con mp4, return alert
-            if (!file.name.endsWith(".mp4")) {
-                new Alert().ShowAlert({
-                    title: lang.invalid_file,
-                    icon: "error",
-                });
-                return;
-            }
-
-                let video = document.getElementById("video-background");
-                let source = video.querySelector('source');
-
-                console.log(source);
-
-                source.src = file.path;
-                video.load();
-                video.style.display = "";
-                video.play();
-
-                localStorage.setItem("background-video", file.path);
-                new Alert().ShowAlert({
-                    title: lang.background_set_successfully,
-                    icon: "success",
-                });
-            
-
-        });
+        })
 
 
 
@@ -308,8 +203,6 @@ class Settings {
             handleFileSelect(this);
         });
 
-        let saveClickListener = null;
-
         // Define la función handleFileSelect en el ámbito global
         function handleFileSelect(input) {
             const modalPreview = document.getElementById('modal-preview-background');
@@ -343,8 +236,6 @@ class Settings {
 
             save.addEventListener('click', e => {
                 e.preventDefault();
-                console.log("click");
-                e.preventDefault();
                 let imgSrc = cropper.getCroppedCanvas({
                     width: 960,
                 }).toDataURL();
@@ -362,8 +253,6 @@ class Settings {
                     if (err) console.log(err);
                 });
 
-                img.remove();
-
                 modalPreview.classList.remove('is-active');
 
                 //establecer el backgroundimage del body del html
@@ -374,15 +263,11 @@ class Settings {
 
                 localStorage.setItem("background-img", imgSrc);
 
-                new Alert().ShowAlert({
+                Toast.fire({
                     title: lang.background_set_successfully,
                     icon: "success",
                 });
-
-                return;
             });
-
-            return;
         }
 
 
@@ -408,151 +293,22 @@ class Settings {
     }
 
     initAccount() {
-        document.getElementById("copy-uuid").addEventListener("click", () => {
-            let uuid = document.getElementById("user-uuid");
-            navigator.clipboard.writeText(uuid.textContent);
-            new Alert().ShowAlert({
-                title: lang.uuid_copied_correctly,
-                icon: "success",
-            });
-
-            document.getElementById("copy-uuid").classList.remove('fa-copy');
-            document.getElementById("copy-uuid").classList.add('fa-check');
-
-            setTimeout(() => {
-                document.getElementById("copy-uuid").classList.remove('fa-check');
-                document.getElementById("copy-uuid").classList.add('fa-copy');
-            }, 2000);
-        });
         document.querySelector('.accounts').addEventListener('click', async (e) => {
             if (e.target.id === "add-account") return;
             if (e.target.id === "add-account-btn") return;
 
             //obtener el div padre del elemento que se ha clickeado
             let div = e.target;
-            console.log(div);
             //obtener el id del div padre
             let uuid = div.id;
 
 
-            if (e.composedPath()[0].classList.contains('account') || e.composedPath()[0].classList.contains('account-image') || e.composedPath()[0].classList.contains('account-name')) {
-                if (e.target.id === "user-name") {
-                    uuid = e.target.parentElement.id;
-                }
+            if (e.composedPath()[0].classList.contains('account')) {
                 accountSelect(uuid);
                 this.database.update({
                     uuid: "1234",
                     selected: uuid
                 }, 'accounts-selected');
-            }
-
-            //si contiene la clase fa-solid fa-fire
-            if (e.target.classList.contains("fa-fire")) {
-                console.log("es premium");
-                const modal = document.createElement('div');
-                modal.classList.add('modal', 'is-active');
-
-                const modalBackground = document.createElement('div');
-                modalBackground.classList.add('modal-background');
-
-                const modalCard = document.createElement('div');
-                modalCard.classList.add('modal-card');
-                modalCard.style.backgroundColor = '#212121';
-                modalCard.style.height = '90%';
-
-                const modalHeader = document.createElement('header');
-                modalHeader.classList.add('modal-card-head');
-                modalHeader.style.backgroundColor = '#212121';
-
-                const modalTitle = document.createElement('h1');
-                modalTitle.classList.add('modal-card-title');
-                modalTitle.textContent = "¡Felicidades!";
-                modalTitle.style.color = '#fff';
-                modalTitle.style.fontSize = '30px';
-                modalTitle.style.fontWeight = '600';
-
-                const closeButton = document.createElement('button');
-                closeButton.classList.add('delete');
-                closeButton.setAttribute('aria-label', 'close');
-        
-                closeButton.addEventListener('click', () => {
-                    modal.classList.remove('is-active');
-                    localStorage.setItem('WelcomePremiumShown', true);
-                });
-
-                const modalBody = document.createElement('section');
-                modalBody.classList.add('modal-card-body');
-                modalBody.style.backgroundColor = '#212121';
-
-                const content = document.createElement('div');
-                content.classList.add('content');
-                content.style.color = '#fff';
-                content.style.backgroundColor = '#212121';
-
-                const texts = [
-                    lang.premium_screen_1,
-                    lang.premium_screen_2,
-                    lang.premium_screen_3,
-                    lang.premium_screen_4,
-                    lang.premium_screen_5,
-                    lang.premium_screen_6,
-                    lang.premium_screen_7,
-                    lang.premium_screen_8,
-                    lang.premium_screen_9,
-                    lang.premium_screen_10,
-                    lang.premium_screen_11,
-                    lang.premium_screen_12,
-                ];
-
-
-                for (let i = 0; i < texts.length; i++) {
-                    if (i === 1 || i === 3 || i === 5 || i === 7 || i === 9) {
-                        const h2 = document.createElement('h2');
-                        h2.innerHTML = texts[i];
-                        h2.style.color = '#fff';
-                        h2.style.fontWeight = '600'
-                        h2.style.marginBottom = '0px';
-                        content.appendChild(h2);
-                    } else {
-                        const p = document.createElement('p');
-                        p.innerHTML = texts[i];
-                        p.style.color = '#fff';
-                        p.style.fontWeight = '500'
-                        p.style.marginBottom = '10px';
-                        content.appendChild(p);
-                    }
-                }
-
-
-                const modalFooter = document.createElement('footer');
-                modalFooter.classList.add('modal-card-foot');
-                modalFooter.style.backgroundColor = '#212121';
-
-                const acceptButton = document.createElement('button');
-                acceptButton.classList.add('button', 'is-info');
-                acceptButton.textContent = 'Aceptar';
-        
-                acceptButton.addEventListener('click', () => {
-                    modal.classList.remove('is-active');
-                    localStorage.setItem('WelcomePremiumShown', true);
-                });
-
-                // Añadir elementos al modal
-                modalHeader.appendChild(modalTitle);
-                modalHeader.appendChild(closeButton);
-
-                modalBody.appendChild(content);
-
-                modalFooter.appendChild(acceptButton);
-
-                modalCard.appendChild(modalHeader);
-                modalCard.appendChild(modalBody);
-                modalCard.appendChild(modalFooter);
-
-                modal.appendChild(modalBackground);
-                modal.appendChild(modalCard);
-
-                document.body.appendChild(modal);
             }
 
             let selectedaccount = await this.database.get('1234', 'accounts-selected');
@@ -567,16 +323,16 @@ class Settings {
                 let btnMostrarSkin = document.getElementById('mostrarskin-userinfo-btn');
 
 
-                let accounts = await this.database.getAccounts();
-                let account = accounts.find(account => account.uuid === uuid ? uuid : uuid_);
+                let accounts = await this.database.getAll('accounts');
+                let account = accounts.find(account => account.value.uuid === uuid ? uuid : uuid_);
 
                 const axios = require('axios');
                 
                 try {
-                    await axios.get(`https://api.battlylauncher.com/api/skin/${account.name}.png`);
-                    userImage.style.backgroundImage = `url(https://api.battlylauncher.com/api/skin/${account.name}.png)`;
+                    await axios.get(`http://api.battlylauncher.com/api/skin/${account.value.name}.png`);
+                    userImage.style.backgroundImage = `url(http://api.battlylauncher.com/api/skin/${account.value.name}.png)`;
 
-                    btnMostrarSkin.onclick = function () {
+                    btnMostrarSkin.onclick = function() {
                         // Create the outermost div element
                         const modalDiv = document.createElement("div");
                         modalDiv.classList.add("modal");
@@ -590,32 +346,29 @@ class Settings {
                         // Create the modal content div
                         const modalContentDiv = document.createElement("div");
                         modalContentDiv.classList.add("modal-content");
-                        modalContentDiv.style.height = "60%";
 
                         // Create the style element
                         const styleElement = document.createElement("style");
                         styleElement.textContent = `
-                            #skin-viewer *{ background-image: url('https://api.battlylauncher.com/api/skin/${account.name}.png'); }
+                            #skin-viewer *{ background-image: url('http://api.battlylauncher.com/api/skin/${account.value.name}.png'); }
                         `;
 
-                        // Crear el elemento div del visor de piel
+                        // Create the skin viewer div
                         const skinViewerDiv = document.createElement("div");
                         skinViewerDiv.id = "skin-viewer";
-                        skinViewerDiv.classList.add("mc-skin-viewer-11x", "spin");
+                        skinViewerDiv.classList.add("mc-skin-viewer-11x", "legacy", "legacy-cape", "spin");
 
-                        // Crear el div del jugador
+                        // Create the player div
                         const playerDiv = document.createElement("div");
                         playerDiv.classList.add("player");
 
-                        // Partes del cuerpo
+                        // Create the various body parts (Head, Body, Arms, Legs, Cape)
                         const bodyParts = ["head", "body", "left-arm", "right-arm", "left-leg", "right-leg"];
-
-                        // Crear cada parte del cuerpo
                         bodyParts.forEach((part) => {
                             const partDiv = document.createElement("div");
                             partDiv.classList.add(part);
 
-                            // Elementos internos de cada parte
+                            // Create the inner elements for each body part (top, left, front, right, back, bottom, accessory)
                             const innerElements = ["top", "left", "front", "right", "back", "bottom", "accessory"];
                             innerElements.forEach((innerElement) => {
                                 const innerDiv = document.createElement("div");
@@ -625,8 +378,6 @@ class Settings {
 
                             playerDiv.appendChild(partDiv);
                         });
-
-                        skinViewerDiv.appendChild(playerDiv);
 
                         // Create the close button
                         const closeButton = document.createElement("button");
@@ -646,7 +397,7 @@ class Settings {
                         document.body.appendChild(modalDiv);
 
 
-                        closeButton.onclick = function () {
+                        closeButton.onclick = function() {
                             modalDiv.remove();
                         }
 
@@ -667,7 +418,6 @@ class Settings {
                         // Create the modal content div
                         const modalContentDiv = document.createElement("div");
                         modalContentDiv.classList.add("modal-content");
-                        modalContentDiv.style.height = "60%";
 
                         // Create the style element
                         const styleElement = document.createElement("style");
@@ -730,28 +480,28 @@ class Settings {
 
                 let btnDeleteAccount = document.getElementById("eliminarcuenta-userinfo-btn")
                 btnDeleteAccount.onclick = async () => {
-                    let accounts = await this.database.getAccounts();
-                    let account = accounts.find(account => account.uuid === uuid ? uuid : uuid_);
-                    this.database.deleteAccount(account.uuid);
+                    let accounts = await this.database.getAll('accounts');
+                    let account = accounts.find(account => account.value.uuid === uuid ? uuid : uuid_);
+                    this.database.delete(account.value.uuid, 'accounts');
                     div_.remove();
                     modalUserInfo.classList.remove('is-active');
                     //eliminar el div de la cuenta seleccionada
                     document.getElementById(uuid ? uuid : uuid_).remove();
-                    new Alert().ShowAlert({
+                    Toast.fire({
                         title: lang.account_deleted_successfully,
                         icon: "success",
                     });
 
                     //si no hay cuentas, changePanel("login");
-                    let accounts_ = await this.database.getAccounts();
+                    let accounts_ = await this.database.getAll('accounts');
                     if (!accounts_.length) {
                         changePanel("login");
                         document.querySelector(".cancel-login").style.display = "none";
                     }
                 }
 
-                userName.textContent = account.name;
-                userUUID.textContent = account.uuid;
+                userName.textContent = account.value.name;
+                userUUID.textContent = account.value.uuid;
 
 
             } else if (e.target.id === "account-skin") {
@@ -760,10 +510,10 @@ class Settings {
                 let skinName = document.getElementById('skin-name');
 
                 modalSkin.classList.add('is-active');
-                let account = await this.database.getAccount(uuid);
+                let account = await this.database.get(uuid, 'accounts');
 
-                skinImage.style.backgroundImage = `url(https://api.battlylauncher.com/api/skin/${account.name}.png)`;
-                skinName.textContent = account.name;
+                skinImage.style.backgroundImage = `url(http://api.battlylauncher.com/api/skin/${account.value.name}.png)`;
+                skinName.textContent = account.value.name;
             }
         })
 
@@ -782,7 +532,7 @@ class Settings {
         document.getElementById("free-ram").textContent = `${freeMem} GB`;
 
         let sliderDiv = document.querySelector(".memory-slider");
-        sliderDiv.setAttribute("max", Math.trunc((100 * totalMem) / 100));
+        sliderDiv.setAttribute("max", Math.trunc((80 * totalMem) / 100));
 
         let ram = ramDatabase ? ramDatabase : {
             ramMin: "0.5",
@@ -842,26 +592,17 @@ class Settings {
         let settingsLauncher = {
             uuid: "1234",
             launcher: {
-                close: launcherDatabase?.launcher?.close || 'close-launcher',
-                closeMusic: launcherDatabase?.launcher?.closeMusic || 'close-music'
+                close: launcherDatabase?.launcher?.close || 'close-launcher'
             }
         }
 
         let closeLauncher = document.getElementById("launcher-close");
-        let closeMusic = document.getElementById("music-close");
         let openLauncher = document.getElementById("launcher-open");
-        let openMusic = document.getElementById("music-open");
 
         if (settingsLauncher.launcher.close === 'close-launcher') {
             closeLauncher.checked = true;
         } else if (settingsLauncher.launcher.close === 'open-launcher') {
             openLauncher.checked = true;
-        }
-
-        if (settingsLauncher.launcher.closeMusic === 'close-music') {
-            closeMusic.checked = true;
-        } else if (settingsLauncher.launcher.closeMusic === 'open-music') {
-            openMusic.checked = true;
         }
 
         closeLauncher.addEventListener("change", () => {
@@ -881,24 +622,6 @@ class Settings {
             settingsLauncher.launcher.close = 'open-launcher';
             this.database.update(settingsLauncher, 'launcher');
         })
-
-        closeMusic.addEventListener("change", () => {
-            if (closeMusic.checked) {
-                openMusic.checked = false;
-            }
-            if (!closeMusic.checked) closeMusic.checked = true;
-            settingsLauncher.launcher.closeMusic = 'close-music';
-            this.database.update(settingsLauncher, 'launcher');
-        });
-
-        openMusic.addEventListener("change", () => {
-            if (openMusic.checked) {
-                closeMusic.checked = false;
-            }
-            if (!openMusic.checked) openMusic.checked = true;
-            settingsLauncher.launcher.closeMusic = 'open-music';
-            this.database.update(settingsLauncher, 'launcher');
-        });
     }
 
     initTab() {
@@ -920,14 +643,18 @@ class Settings {
         document.querySelector('.save-tabs-btn').addEventListener('click', () => {
             document.querySelector('.default-tab-btn').click();
 
+            Toast.fire({
+                title: lang.settings_saved_successfully,
+                icon: "success",
+            });
+
+
             let color = document.getElementById("theme-color");
             localStorage.setItem("theme-color", color.value);
             let color_bottom_bar = document.getElementById("theme-color-bottom-bar");
             localStorage.setItem("theme-color-bottom-bar", color_bottom_bar.value);
 
             changePanel("home");
-
-            document.getElementById("loading-text").innerHTML = lang.settings_saved_successfully;
 
 
         })
@@ -938,6 +665,13 @@ class Settings {
             this.database.add({
                 uuid: "1234"
             }, 'accounts-selected')
+        }
+
+        if (!(await this.database.getAll('java-path')).length) {
+            this.database.add({
+                uuid: "1234",
+                path: false
+            }, 'java-path')
         }
 
         if (!(await this.database.getAll('java-args')).length) {
@@ -1001,12 +735,12 @@ class Settings {
                 javaPathInputTxt.value = file;
                 localStorage.setItem("java-path", file);
 
-                new Alert().ShowAlert({
+                Toast.fire({
                     title: lang.java_path_set_successfully,
                     icon: "success",
                 });
 
-            } else new Alert().ShowAlert({
+            } else Toast.fire({
                 title: lang.the_file_name_java,
                 icon: "error",
             });
@@ -1016,7 +750,7 @@ class Settings {
             javaPathInputTxt.value = 'Ruta de java no establecida';
             localStorage.removeItem("java-path");
 
-            new Alert().ShowAlert({
+            Toast.fire({
                 title: lang.java_path_reset_successfully,
                 icon: "success",
             });

@@ -25,25 +25,22 @@
   },
   "dependencies": {
     "adm-zip": "^0.5.10",
-    "axios": "^1.6.7",
-    "electron-updater": "^6.1.8",
+    "axios": "^1.6.4",
+    "electron-updater": "^6.1.7",
     "javascript-obfuscator": "^4.1.0",
-    "minecraft-launcher-core": "^3.18.0",
-    "nbtify": "^1.90.1",
+    "minecraft-launcher-core": "^3.17.3",
+    "nbtify": "^1.85.0",
     "node-fetch": "^2.7.0",
-    "node-notifier": "^10.0.1",
-    "protobufjs": "^7.2.6",
-    "socket.io-client": "^4.7.5",
-    "toml": "^3.0.0",
-    "unzipper": "^0.10.14",
+    "protobufjs": "^7.2.5",
+    "socket.io-client": "^4.7.3",
     "ws": "^8.16.0",
-    "ytdl-core": "^4.11.5"
+    "ytdl-core": "^4.9.1"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "electron": "^30.0.0",
-    "electron-builder": "^24.13.3",
-    "nodemon": "^3.1.0"
+    "electron": "^29.0.1",
+    "electron-builder": "^24.9.1",
+    "nodemon": "^3.0.2"
   },
   "repository": {
     "type": "git",
