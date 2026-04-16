@@ -2,4 +2,4 @@
 
 <h1 align="center">Battly Launcher</h1>
 
-<em><h5 align="center">( OlimbosMC Studios )</h5></em>
+<em><h5 align="center">( OmegaMC Studios )</h5></em>
