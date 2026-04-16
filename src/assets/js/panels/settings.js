@@ -1,7 +1,3 @@
-/**
- * @author TECNO BROS
- 
- */
 'use strict';
 
 const {

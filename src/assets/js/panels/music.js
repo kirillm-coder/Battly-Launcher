@@ -1,4 +1,3 @@
-
 'use strict';
 
 const { ipcMain, ipcRenderer } = require('electron');

@@ -1,8 +1,3 @@
-/**
- * @author TECNO BROS
- 
- */
-
 "use strict";
 const electron = require("electron");
 const path = require("path");

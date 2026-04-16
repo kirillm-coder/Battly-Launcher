@@ -375,7 +375,7 @@ class Mods {
                                 } else { }
                             } else { }
                         } catch (error) {
-                            console.error(`Error al descargar el mod ${projectID}-${fileID}:`);
+                            console.error(`Errore durante il download della mod ${projectID}-${fileID}:`);
                             console.error(error);
                         }
                     }

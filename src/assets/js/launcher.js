@@ -1,8 +1,3 @@
-/**
- * @author TECNO BROS
- 
- */
-
 'use strict';
 
 // libs 
@@ -24,9 +19,9 @@ import Chat from './panels/chat.js';
 class Launcher {
     async init() {
         const loadingText = document.getElementById("loading-text");
-        loadingText.innerHTML = "Cargando Panel de Inicio";
+        loadingText.innerHTML = "Caricamento del pannello Home";
         this.initLog();
-        console.log("🔄 Iniciando Launcher...");
+        console.log("🔄 Avvio del programma di avvio...");
         if (process.platform == "win32") this.initFrame();
         this.config = await config.GetConfig().then(res => res);
         this.news = await config.GetNews().then(res => res);
@@ -47,7 +42,7 @@ class Launcher {
 
     initFrame() {
         const loadingText = document.getElementById("loading-text");
-        loadingText.innerHTML = "Cargando Panel";
+        loadingText.innerHTML = "Pannello di caricamento";
         document.querySelector(".preload-content").style.display = "block";
         console.log("🔄 Iniciando Frame...")
         document.querySelector(".frame").classList.toggle("hide")
@@ -76,7 +71,7 @@ class Launcher {
         document.querySelector(".preload-content").style.display = "";
         let panelsElem = document.querySelector(".panels")
         for (let panel of panels) {
-            console.log(`🔄 Iniciando panel de ${panel.name}...`);
+            console.log(`🔄 Pannello di partenza ${panel.name}...`);
             let div = document.createElement("div");
             div.classList.add("panel", panel.id)
             div.innerHTML = fs.readFileSync(`${__dirname}/panels/${panel.id}.html`, "utf8");
@@ -91,7 +86,7 @@ class Launcher {
         document.querySelector(".preload-content").style.display = "block";
         let accounts = await this.database.getAll('accounts');
         let selectaccount = (await this.database.get('1234', 'accounts-selected'))?.value?.selected;
-        console.log(`🔄 Iniciando ${accounts.length} cuenta(s)...`);
+        console.log(`🔄 Inizia ${accounts.length} conto/i...`);
         
 
         if (!accounts.length) {
@@ -101,7 +96,7 @@ class Launcher {
             for (let account of accounts) {
                 account = account.value;
                 if (account.meta.type === 'Xbox') {
-                    console.log(`🔄 Iniciando cuenta de xbox con el nombre de usuario ${account.name}...`);
+                    console.log(`🔄 Accedere a un account Xbox con il nome utente ${account.name}...`);
                     let refresh = await new Microsoft(this.config.client_id).refresh(account);
                     let refresh_accounts;
                     let refresh_profile;
@@ -141,7 +136,7 @@ class Launcher {
                 } else if (account.meta.type === 'Mojang') {
                     if (account.meta.offline) {
                         document.querySelector(".preload-content").style.display = "block";
-                        console.log(`🔄 Iniciando cuenta de Mojang con el nombre de ususario ${account.name}...`);
+                        console.log(`🔄 Avvio di un account Mojang con il nome utente ${account.name}...`);
                         addAccount(account);
                         if (account.uuid === selectaccount) accountSelect(account.uuid)
                         continue;
@@ -151,12 +146,12 @@ class Launcher {
                     if (!validate) {
                         this.database.delete(account.uuid, 'accounts');
                         if (account.uuid === selectaccount) this.database.update({ uuid: "1234" }, 'accounts-selected')
-                        console.error(`[Cuenta] ${account.uuid}: El token es inválido.`);
+                        console.error(`[Account] ${account.uuid}: Il token non è valido.`);
                         continue;
                     }
 
                     let refresh = await Mojang.refresh(account);
-                    console.log(`🔄 Iniciando cuenta de Mojang con el nombre de usuario ${account.name}...`);
+                    console.log(`🔄 Avvio di un account Mojang con il nome utente ${account.name}...`);
                     let refresh_accounts;
 
                     if (refresh.error) {
@@ -182,7 +177,7 @@ class Launcher {
                     addAccount(refresh_accounts);
                     if (account.uuid === selectaccount) accountSelect(refresh.uuid)
                 } else if (account.meta.type === 'cracked') {
-                    console.log(`🔄 Iniciando cuenta de Battly con el nombre de usuario ${account.name}...`);
+                    console.log(`🔄 Avvio di un account Battly con il nome utente ${account.name}...`);
                     addAccount(account);
                     if (account.uuid === selectaccount) accountSelect(account.uuid)
                 }

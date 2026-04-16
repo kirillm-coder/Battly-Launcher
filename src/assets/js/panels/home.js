@@ -1,7 +1,3 @@
-/**
- * @author TECNO BROS
- 
- */
 "use strict";
 import {
     logger,
@@ -44,8 +40,8 @@ function ShowPanelError(error) {
     audioError.play();
 
     ipcRenderer.send("new-notification", {
-        title: "Error al abrir Minecraft",
-        body: "Consulta el error abriendo Battly.",
+        title: "Errore durante l'apertura di Minecraft",
+        body: "Verifica l'errore aprendo Battly.",
     });
     // Crear el elemento div principal con la clase "modal is-active"
     const modalDiv = document.createElement('div');
@@ -85,7 +81,7 @@ function ShowPanelError(error) {
 
     // Crear el elemento p con el mensaje de error y agregarlo al div section
     const errorP = document.createElement('p');
-    errorP.textContent = 'Esto es un mensaje de error al iniciar Minecraft. Esto no es por culpa de Battly, no reportar este problema.';
+    errorP.textContent = 'Questo è un messaggio di errore che compare all\'avvio di Minecraft. Non è colpa di Battly; si prega di non segnalare questo problema.';
     bodySection.appendChild(errorP);
 
     // Crear el elemento div con la clase "card" y agregarlo al div section
@@ -128,7 +124,7 @@ function ShowPanelError(error) {
     // Crear el elemento button con las clases y atributos y agregarlo al div modal-card-foot
     const closeButton = document.createElement('button');
     closeButton.className = 'button is-danger';
-    closeButton.textContent = 'Cerrar';
+    closeButton.textContent = 'Chiudi';
     closeButton.addEventListener('click', () => {
         modalDiv.remove();
     });
@@ -136,7 +132,7 @@ function ShowPanelError(error) {
     //boton de guardar logs, mostrará un dialogo para guardar los logs en un archivo de texto, abrirá el explorador de archivos y se podrá guardar donde quiera
     const saveLogsButton = document.createElement('button');
     saveLogsButton.className = 'button is-info';
-    saveLogsButton.textContent = 'Guardar logs';
+    saveLogsButton.textContent = 'Salva i registri';
     saveLogsButton.addEventListener('click', () => {
         let logs = document.querySelector('.errores').value;
         let logsPath = path.join(__dirname, 'logs.txt');
@@ -147,7 +143,7 @@ function ShowPanelError(error) {
     const discordBtn = document.createElement('button');
     discordBtn.className = 'button is-info';
     discordBtn.addEventListener('click', () => {
-        shell.openExternal('https://discord.gg/tecno-bros-885235460178342009');
+        shell.openExternal('https://discord.battly.site');
     });
     discordBtn.innerHTML = '<span><i class="fab fa-discord"></i> Discord</span>';
 
@@ -1119,7 +1115,7 @@ class Home {
                                             }
                                         }
                                     } else {
-                                        console.log("❌ La versión no está en la lista.");
+                                        console.log("❌ La versione non è elencata.");
                                     }
 
                                     let archivoConfigSkins = `${dataDirectory}/.battly/instances/${instancias[i]}/CustomSkinLoader/CustomSkinLoader.json`;
@@ -1192,14 +1188,14 @@ class Home {
                             });
 
                             launch.on('error', err => {
-                                new logger('[Error]', '#ff3860')
+                                new logger('[Errore]', '#ff3860')
                                 console.log(err);
                             });
 
 
                         });
                     } catch {
-                        console.log("❌ No se ha podido leer el archivo instance.json");
+                        console.log("❌ Impossibile leggere il file instance.json");
                     }
                 }
                     
@@ -1563,10 +1559,10 @@ class Home {
                         `${dataDirectory}/.battly/runtime/jre-17.0.1.12.1-windows-x64/bin/java.exe`
                     );
                 } else {
-                    inputRutaJava.value = "Java no encontrado. Haz click aquí para buscarlo.";
+                    inputRutaJava.value = "Java non trovato. Clicca qui per cercarlo.";
                 }
             } else {
-                inputRutaJava.value = "Java no encontrado. Haz click aquí para buscarlo.";
+                inputRutaJava.value = "Java non trovato. Clicca qui per cercarlo.";
             }
         }
     }
@@ -1957,12 +1953,12 @@ class Home {
                 blockNews.innerHTML = `
                     <div class="news-header">
                         <div class="header-text">
-                            <div class="title_">No hay noticias disponibles actualmente.</div>
+                            <div class="title_">Al momento non sono disponibili notizie.</div>
                         </div>
                     </div>
                     <div class="news-content">
                         <div class="bbWrapper">
-                            <p>Puedes seguir todas las noticias relacionadas con el servidor aquí.</p>
+                            <p>Qui puoi seguire tutte le notizie relative al server.</p>
                         </div>
                     </div>`;
                 news.appendChild(blockNews);
@@ -1997,12 +1993,12 @@ class Home {
             blockNews.innerHTML = `
                 <div class="news-header">
                     <div class="header-text">
-                        <div class="title">Error.</div>
+                        <div class="title">Errore.</div>
                     </div>
                 </div>
                 <div class="news-content">
                     <div class="bbWrapper">
-                        <p>No se puede contactar con el servidor de noticias.</br>Por favor, compruebe su configuración.</p>
+                        <p>Impossibile contattare il server delle notizie.</br>Verifica le tue impostazioni.</p>
                     </div>
                 </div>`;
             // news.appendChild(blockNews);
@@ -2602,7 +2598,7 @@ class Home {
                 }
 
                 launch.on("extract", (extract) => {
-                    consoleOutput_ += `[EXTRACT] ${extract}\n`;
+                    consoleOutput_ += `[ESTRARRE] ${extract}\n`;
                     let seMostroInstalando = false;
                     if (seMostroInstalando) { } else {
                         seMostroInstalando = true;
@@ -2611,9 +2607,9 @@ class Home {
 
                 launch.on("debug", (e) => {
                     consoleOutput_ += `[DEBUG] ${JSON.stringify(e, null, 2)}\n`;
-                    if (e.includes("Failed to start due to TypeError")) return ShowPanelError(`${langs.error_detected_one} \nError:\n${e}`);
+                    if (e.includes("Avvio non riuscito a causa di TypeError")) return ShowPanelError(`${langs.error_detected_one} \nError:\n${e}`);
 
-                    if (e.includes("Downloaded and extracted natives")) {
+                    if (e.includes("File nativi scaricati ed estratti")) {
 
                         progressBar1.style.display = "";
                         progressBar1.max = 100;
@@ -2622,49 +2618,49 @@ class Home {
                         info.innerHTML = langs.downloading_files;
                     }
 
-                    if (e.includes("Attempting to download Minecraft version jar")) {
+                    if (e.includes("Tentativo di scaricare il file jar della versione di Minecraft")) {
                         info.innerHTML = langs.downloading_version;
                     }
 
-                    if (e.includes("Attempting to download assets")) {
+                    if (e.includes("Tentativo di scaricare le risorse")) {
                         info.innerHTML = langs.downloading_assets;
                     }
 
-                    if (e.includes("Downloaded Minecraft version jar")) {
+                    if (e.includes("Scaricato il file jar della versione di Minecraft")) {
                         info.innerHTML = langs.downloading_libraries;
                     }
 
-                    if (e.includes("Downloaded and extracted natives")) {
+                    if (e.includes("File nativi scaricati ed estratti")) {
                         info.innerHTML = langs.downloading_natives;
                     }
 
-                    if (e.includes("Failed to start the minecraft server")) return ShowPanelError(`${langs.error_detected_one} \nError:\n${e}`);
-                    if (e.includes('Exception in thread "main" ')) return ShowPanelError(`${langs.error_detected_two} \nError:\n${e}`);
+                    if (e.includes("Impossibile avviare il server di Minecraft")) return ShowPanelError(`${langs.error_detected_one} \nErrore:\n${e}`);
+                    if (e.includes('Eccezione nel thread "main" ')) return ShowPanelError(`${langs.error_detected_two} \nErrore:\n${e}`);
 
-                    if (e.includes("There is insufficient memory for the Java Runtime Environment to continue.")) return ShowPanelError(`${langs.error_detected_three} \nError:\n${e}`);
-                    if (e.includes("Could not reserve enough space for object heap")) return ShowPanelError(`${langs.error_detected_three} \nError:\n${e}`);
+                    if (e.includes("Memoria insufficiente per consentire all'ambiente di runtime Java di continuare.")) return ShowPanelError(`${langs.error_detected_three} \nError:\n${e}`);
+                    if (e.includes("Impossibile riservare spazio sufficiente per l'heap degli oggetti")) return ShowPanelError(`${langs.error_detected_three} \nErrore:\n${e}`);
 
-                    if (e.includes("Forge patcher exited with code 1")) {
+                    if (e.includes("Il programma di patch Forge è terminato con codice 1")) {
                         ShowPanelError(`${langs.error_detected_four} \nError:\n${e}`);
                         progressBar1.style.display = "none";
                         info.style.display = "none";
                         playBtn.style.display = "";
                     }
 
-                    if (e.includes("Unable to launch")) return ShowPanelError(`${langs.error_detected_five} \nError:\n${e}`);
+                    if (e.includes("Impossibile avviare")) return ShowPanelError(`${langs.error_detected_five} \nErrore:\n${e}`);
 
-                    if (e.includes("Minecraft Crash Report") && !e.includes("THIS IS NOT A ERROR")) return ShowPanelError(`${langs.error_detected_one} \nError:\n${e}`);
+                    if (e.includes("Rapporto sugli arresti anomali di Minecraft") && !e.includes("QUESTO NON È UN ERRORE")) return ShowPanelError(`${langs.error_detected_one} \nErrore:\n${e}`);
 
-                    if (e.includes("java.lang.ClassCastException")) return ShowPanelError(`${langs.error_detected_five} \nError:\n${e}`);
+                    if (e.includes("java.lang.ClassCastException")) return ShowPanelError(`${langs.error_detected_five} \nErrore:\n${e}`);
 
-                    if (e.includes("Minecraft has crashed!")) return ShowPanelError(`${langs.error_detected_five} \nError:\n${e}`);
+                    if (e.includes("Minecraft si è bloccato!")) return ShowPanelError(`${langs.error_detected_five} \nErrore:\n${e}`);
                 });
                 launch.on("data", (e) => {
                     consoleOutput_ += `[DEBUG] ${JSON.stringify(e, null, 2)}\n`;
-                    if (e.includes("Failed to start du<e to TypeError")) {
+                    if (e.includes("Avvio non riuscito a causa di TypeError")) {
                         Toast.fire({
                             icon: "error",
-                            title: "Error al iniciar Minecraft",
+                            title: "Errore all'avvio di Minecraft",
                         });
                         progressBar1.style.display = "none";
                         progressBar1.max = 100;
@@ -2739,7 +2735,7 @@ class Home {
                 });
 
                 launch.on("patch", (patch) => {
-                    consoleOutput_ += `[INSTALANDO LOADER] ${patch}\n`;
+                    consoleOutput_ += `[INSTALLAZIONE DEL CARICATORE] ${patch}\n`;
                     let seMostroInstalando = false;
                     if (seMostroInstalando) { } else {
                         logTextArea1.innerHTML = `${langs.installing_loader}...`;

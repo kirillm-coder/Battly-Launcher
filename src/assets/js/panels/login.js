@@ -1,8 +1,3 @@
-/**
- * @author TECNO BROS
- 
- */
-
 'use strict';
 
 import { database, changePanel, addAccount, accountSelect } from '../utils.js';
@@ -30,7 +25,7 @@ class Login {
     }
 
     getOnline() {
-        console.log(`🔃 Iniciando panel de Microsoft...`)
+        console.log(`🔃 Avvio del pannello Microsoft...`)
         this.loginMicrosoft();
         document.querySelector('.cancel-login').addEventListener("click", () => {
             document.querySelector(".cancel-login").style.display = "none";
@@ -39,7 +34,7 @@ class Login {
     }
 
     getOffline() {
-        console.log(`🔃 Iniciando panel de offline...`)
+        console.log(`🔃 Avvio del pannello offline...`)
         this.loginOffline();
         document.querySelector('.cancel-login').addEventListener("click", () => {
             document.querySelector(".cancel-login").style.display = "none";
@@ -68,7 +63,7 @@ class Login {
                         document.querySelector(".preload-content").style.display = "none";
                         changePanel("settings");
                     }, 3000);
-                    console.log("❌ Error al iniciar sesión con Microsoft");
+                    console.log("❌ Errore durante l'accesso con Microsoft");
                     microsoftBtn.disabled = false;
                     mojangBtn.disabled = false;
                     cancelBtn.disabled = false;
@@ -225,7 +220,7 @@ class Login {
             var request = indexedDB.open("database", 1);
 
             request.onerror = function (event) {
-                console.log("❌ Error al abrir la base de datos");
+                console.log("❌ Errore durante l'apertura del database");
             };
 
             request.onsuccess = function (event) {
@@ -245,7 +240,7 @@ class Login {
                 getAllRequest.onsuccess = function (event) {
                     // Obtener los datos del resultado de la solicitud
                     accounts = event.target.result;
-                    console.log("✅ Base de datos abierta correctamente");
+                    console.log("✅ Il database è stato aperto correttamente");
                     console.log(accounts);
                 };
 

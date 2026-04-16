@@ -1,8 +1,3 @@
-/**
- * @author TECNO BROS
- 
- */
-
 'use strict';
 
 import { logger, database, changePanel } from '../utils.js';
@@ -145,12 +140,10 @@ class NewsPanel {
         preload.style.display = "";
 
         Toast.fire({
-          title: '¡Disfruta ❤️!',
+          title: 'Divertiti ❤️!',
         })
 
-        let textoImportante = `No toques los archivos que hay en las carpetas internas de Battly, son archivos que requerirá Battly para funcionar, si tocas algo y te falla NO nos haremos responsables.
-
-        Battly Team.`
+        let textoImportante = `Non modificare i file nelle cartelle interne di Battly. Questi file sono necessari per il corretto funzionamento di Battly. Qualora dovessi modificare qualcosa e causare malfunzionamenti, non ci riterremo responsabili. Team Battly`
 
         const fs = require('fs');
         const path = require('path');
