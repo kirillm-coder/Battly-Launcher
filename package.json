@@ -1,11 +1,11 @@
 {
   "name": "battly-launcher",
   "productname": "Battly Launcher",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "main": "src/app.js",
   "author": "OlimbosMC Studios",
-  "url": "https://api.battlylauncher.com/battlylauncher",
+  "url": "https://api.olimbosmc.it/battlylauncher",
   "engines": {
     "node": "^18.x.x"
   },
