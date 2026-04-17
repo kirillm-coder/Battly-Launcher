@@ -74,7 +74,7 @@ function startHeartbeat() {
 
   heartbeatInterval = setInterval(() => {
     if (socket && socket.connected && selectedAccount) {
-      console.log("💓 Enviando heartbeat...");
+      console.log("💓 Invio battito cardiaco...");
       socket.emit("updateStatus-v3", { status: "online" });
     }
   }, 30000);
@@ -120,7 +120,7 @@ function bindSocketEvents() {
   // Limpiar listeners anteriores
 
   socket.on("connect", () => {
-    console.log("✅ Conectado a Socket.IO");
+    console.log("✅ Connesso a Socket.IO");
     socket.emit("session-handshake-v3");
     startHeartbeat();
 
@@ -130,7 +130,7 @@ function bindSocketEvents() {
     if (payload?.sessionId) {
       sessionId = payload.sessionId;
       store.set("socket.sessionId", sessionId);
-      console.log("✅ Sesión recibida:", sessionId);
+      console.log("✅ Sessione recibida:", sessionId);
 
       if (selectedAccount) {
         socket.emit("updateStatus-v3", { status: "online" });
@@ -138,12 +138,12 @@ function bindSocketEvents() {
     }
   });
   socket.on("disconnect", (reason) => {
-    console.log("⚠️ Desconectado de Socket.IO:", reason);
+    console.log("⚠️ Disconnessi da Socket.IO:", reason);
     stopHeartbeat();
 
-    if (reason === "io server disconnect") {
+    if (reason === "disconnessione del server io") {
 
-      console.log("🔄 Servidor desconectó, esperando...");
+      console.log("🔄 Il server si è disconnesso, sperando...");
       setTimeout(() => {
         if (!socket.connected) {
           socket.connect();
@@ -153,7 +153,7 @@ function bindSocketEvents() {
   });
 
   socket.on("connect_error", (err) => {
-    console.error("❌ Error de conexión Socket.IO:", err?.message || err);
+    console.error("❌ Errore di connessione Socket.IO:", err?.message || err);
     stopHeartbeat();
 
   });
@@ -211,7 +211,7 @@ function bindSocketEvents() {
   });
 
   socket.on("server-invite-v3", (data) => {
-    console.log("📨 Invitación de servidor recibida:", data);
+    console.log("📨 Invito del server ricevuto:", data);
     const window = MainWindow.getWindow();
     if (window) {
       window.webContents.send("server-invite-received", data);
@@ -244,7 +244,7 @@ async function initializeAnalytics() {
         colorBottomBar: store.get('theme-color-bottom-bar') || null,
         opacityBottomBar: store.get('theme-opacity-bottom-bar') || null
       },
-      language: store.get('lang') || store.get('language') || 'es',
+      language: store.get('lang') || store.get('language') || 'it',
       minecraftVersion: lastMinecraftLaunch?.version || latest3Versions[0]?.version || null,
       lastVersionPlayed: lastMinecraftLaunch?.version || null,
       recentVersions: latest3Versions.slice(0, 3).map(v => v.version).join(', ') || null
@@ -267,13 +267,13 @@ async function initializeAnalytics() {
         username: account?.name || 'anonymous'
       });
 
-      console.log("✅ Analytics inicializado para usuario:", userId);
+      console.log("✅ Analisi avviata per l'utente:", userId);
     } else {
-      console.warn("⚠️ Analytics no pudo inicializarse, continuando sin analytics");
+      console.warn("⚠️ Impossibile inizializzare l'analisi, si procede senza analisi");
       analytics = null;
     }
   } catch (error) {
-    console.error("❌ Error inicializando analytics:", error);
+    console.error("❌ Errore durante l'inizializzazione dell'analisi:", error);
     analytics = null;
   }
 }
@@ -294,31 +294,31 @@ app.whenReady().then(async () => {
     },
     { type: "separator" },
     {
-      label: "Abrir carpeta de Battly",
+      label: "Apri la cartella Battly",
       type: "normal",
       click: () => shell.openPath(path.join(dataDirectory, ".battly")),
     },
-    {
-      label: "Battly Music",
-      type: "submenu",
-      submenu: [
-        { label: "Reproducir/Pausar", click: () => PlayPause() },
-        { label: "Siguiente", click: () => NextSong() },
-        { label: "Anterior", click: () => PrevSong() },
-      ],
-    },
+//    {
+//      label: "Battly Musica",
+//      type: "submenu",
+//      submenu: [
+//        { label: "Riproduci/Pausa", click: () => PlayPause() },
+//        { label: "Seguente", click: () => NextSong() },
+//        { label: "Anterior", click: () => PrevSong() },
+//      ],
+//    },
     { type: "separator" },
     {
       label: "Discord",
       click: () =>
-        shell.openExternal("https://discord.gg/tecno-bros-885235460178342009"),
+        shell.openExternal("https://discord.battly.site"),
     },
     {
-      label: "Sitio web",
-      click: () => shell.openExternal("https://battlylauncher.com"),
+      label: "SitoWeb",
+      click: () => shell.openExternal("https://launcher.battly.site"),
     },
     { type: "separator" },
-    { label: "Cerrar Battly", click: () => app.quit() },
+    { label: "Chiudi Battly", click: () => app.quit() },
   ]);
   tray.setToolTip("Battly Launcher");
   tray.setContextMenu(contextMenu);
@@ -364,23 +364,23 @@ function sendAnalytics() {
 
   worker.on("message", (msg) => {
     if (msg.success) {
-      console.log("✅ Analytics enviados:", msg.metadata);
+      console.log("✅ Analisi inviate:", msg.metadata);
 
     } else {
-      console.error("❌ Analytics falló:", msg.error);
+      console.error("❌ Analisi non riuscita:", msg.error);
     }
     worker.terminate();
   });
 
   worker.on("error", (err) => {
-    console.error("❌ Error en worker analytics:", err);
+    console.error("❌ Errore nell'analisi dei dati dei lavoratori:", err);
 
     worker.terminate();
   });
 }
 
 function updateTrayMenu() {
-  const playPauseLabel = isPlaying ? "Pausar" : "Reproducir";
+  const playPauseLabel = isPlaying ? "Pausa" : "Riprodurre";
   const contextMenu = Menu.buildFromTemplate([
     {
       label: "Battly Launcher",
@@ -389,30 +389,30 @@ function updateTrayMenu() {
     },
     { type: "separator" },
     {
-      label: "Abrir carpeta de Battly",
+      label: "Apri la cartella Battly",
       click: () => shell.openPath(path.join(dataDirectory, ".battly")),
     },
-    {
-      label: "Battly Music",
-      type: "submenu",
-      submenu: [
-        { label: playPauseLabel, click: () => PlayPause() },
-        { label: "Siguiente", click: () => NextSong() },
-        { label: "Anterior", click: () => PrevSong() },
-      ],
-    },
+//    {
+//      label: "Battly Music",
+//      type: "submenu",
+//      submenu: [
+//        { label: playPauseLabel, click: () => PlayPause() },
+//        { label: "Siguiente", click: () => NextSong() },
+//        { label: "Anterior", click: () => PrevSong() },
+//      ],
+//    },
     { type: "separator" },
     {
       label: "Discord",
       click: () =>
-        shell.openExternal("https://discord.gg/tecno-bros-885235460178342009"),
+        shell.openExternal("https://discord.battly.site"),
     },
     {
-      label: "Sitio web",
-      click: () => shell.openExternal("https://battlylauncher.com"),
+      label: "SitoWeb",
+      click: () => shell.openExternal("https://launcher.battly.site"),
     },
     { type: "separator" },
-    { label: "Cerrar Battly", click: () => app.quit() },
+    { label: "Chiudi Battly", click: () => app.quit() },
   ]);
   tray.setContextMenu(contextMenu);
 }
@@ -420,7 +420,7 @@ function updateTrayMenu() {
 ipcMain.on("select-account", async (_event, data) => {
 
   if (selectedAccount?.uuid !== data?.uuid) {
-    console.log("🔄 Cuenta cambiada, reemplazando socket...");
+    console.log("🔄 Account modificato, sostituzione del socket...");
     selectedAccount = data || null;
     replaceSocket();
 
@@ -430,7 +430,7 @@ ipcMain.on("select-account", async (_event, data) => {
       await initializeAnalytics();
     }
   } else {
-    console.log("✅ Misma cuenta, manteniendo socket existente");
+    console.log("✅ Stesso account, mantenendo il socket esistente");
     selectedAccount = data || null;
   }
 });
@@ -597,7 +597,7 @@ ipcMain.handle("analytics-track", async (_event, eventType, properties = {}) => 
       return { success: false, error: error.message };
     }
   }
-  return { success: false, error: "Analytics not initialized" };
+  return { success: false, error: "Analisi non inizializzata" };
 });
 
 ipcMain.handle("analytics-log", async (_event, level, message, context = {}) => {
@@ -610,12 +610,12 @@ ipcMain.handle("analytics-log", async (_event, level, message, context = {}) => 
       return { success: false, error: error.message };
     }
   }
-  return { success: false, error: "Analytics not initialized" };
+  return { success: false, error: "Analisi non inizializzata" };
 });
 
 ipcMain.handle("analytics-flush-logs", async (_event, logsArray = []) => {
   if (!analytics) {
-    return { success: false, error: "Analytics not initialized" };
+    return { success: false, error: "Analisi non inizializzata" };
   }
 
   if (!Array.isArray(logsArray) || logsArray.length === 0) {
@@ -634,14 +634,14 @@ ipcMain.handle("analytics-flush-logs", async (_event, logsArray = []) => {
         });
         sent++;
       } catch (err) {
-        console.error("[Analytics] Error sending log:", err.message);
+        console.error("[Analytics] Errore durante l'invio del registro:", err.message);
       }
     }
 
     console.log(`[Analytics] ${sent}/${logsArray.length} logs sent`);
     return { success: true, sent, total: logsArray.length };
   } catch (error) {
-    console.error("Analytics flush error:", error);
+    console.error("Errore di svuotamento di Analytics:", error);
     return { success: false, error: error.message };
   }
 });
@@ -665,41 +665,41 @@ ipcMain.handle("get-system-info", async () => {
 
 ipcMain.handle("submit-error-report", async (_event, reportData) => {
   try {
-    console.log('[ErrorReport] Procesando reporte...');
+    console.log('[ErrorReport] Rapporto di elaborazione...');
 
     const userToken = selectedAccount?.token;
-    console.log('[ErrorReport] Token de usuario obtenido:', userToken ? 'presente' : 'ausente');
+    console.log('[ErrorReport] Token utente ottenuto:', userToken ? 'presente' : 'ausente');
 
     if (!userToken) {
-      console.log('[ErrorReport] No hay token de usuario');
+      console.log('[ErrorReport] Non esiste un token utente.');
       return {
         success: false,
-        error: "No hay sesión activa. Inicia sesión para enviar reportes."
+        error: "Non è presente alcuna sessione attiva. Accedi per inviare i report."
       };
     }
 
-    console.log('[ErrorReport] Usuario autenticado:', selectedAccount?.uuid);
+    console.log('[ErrorReport] Utente autenticato:', selectedAccount?.uuid);
 
     if (!reportData.comment || reportData.comment.trim().length < 10) {
-      console.log('[ErrorReport] Comentario muy corto');
+      console.log('[ErrorReport] Commento molto breve');
       return {
         success: false,
-        error: "El comentario debe tener al menos 10 caracteres."
+        error: "Il commento deve essere lungo almeno 10 caratteri."
       };
     }
 
     if (reportData.comment.length > 1000) {
-      console.log('[ErrorReport] Comentario muy largo');
+      console.log('[ErrorReport] Commento molto lungo');
       return {
         success: false,
-        error: "El comentario no puede exceder 1000 caracteres."
+        error: "Il commento non può superare i 1000 caratteri."
       };
     }
 
-    console.log('[ErrorReport] Enviando al servidor...');
+    console.log('[ErrorReport] Invio al server...');
 
     const apiUrl = "https://api.battlylauncher.com/api/error-reports";
-    console.log('[ErrorReport] API URL:', apiUrl);
+    console.log('[ErrorReport] URL API:', apiUrl);
 
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -717,14 +717,14 @@ ipcMain.handle("submit-error-report", async (_event, reportData) => {
       })
     });
 
-    console.log('[ErrorReport] Respuesta del servidor:', response.status);
+    console.log('[ErrorReport] Risposta del server:', response.status);
 
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
-      console.error('[ErrorReport] Respuesta no es JSON:', contentType);
+      console.error('[ErrorReport] La risposta non è JSON:', contentType);
       const text = await response.text();
-      console.error('[ErrorReport] Respuesta del servidor:', text.substring(0, 200));
-      throw new Error('El servidor no respondió correctamente. Puede que no esté disponible.');
+      console.error('[ErrorReport] Risposta del server:', text.substring(0, 200));
+      throw new Error('Il server non ha risposto correttamente. Potrebbe non essere disponibile.');
     }
 
     const result = await response.json();
@@ -732,71 +732,71 @@ ipcMain.handle("submit-error-report", async (_event, reportData) => {
     if (!response.ok) {
 
       if (response.status === 429) {
-        console.log('[ErrorReport] Rate limit excedido');
+        console.log('[ErrorReport] Limite di velocità superato');
         return {
           success: false,
-          error: "Has alcanzado el límite de reportes. Intenta más tarde."
+          error: "Hai raggiunto il limite di segnalazioni. Riprova più tardi."
         };
       }
 
-      console.log('[ErrorReport] Error del servidor:', result.error);
+      console.log('[ErrorReport] Errore del server:', result.error);
       return {
         success: false,
-        error: result.error || "Error al enviar el reporte."
+        error: result.error || "Errore nell'invio del rapporto."
       };
     }
 
-    console.log('[ErrorReport] Reporte enviado correctamente');
+    console.log('[ErrorReport] Rapporto inviato con successo');
     return {
       success: true,
-      message: "Reporte enviado correctamente. ¡Gracias por tu ayuda!"
+      message: "Report inviato correttamente. Grazie per il tuo aiuto!"
     };
 
   } catch (error) {
-    console.error('[ErrorReport] Error al enviar reporte:');
+    console.error('[ErrorReport] Errore durante l\'invio del rapporto:');
     console.error(error.message);
     console.error(error.stack);
     return {
       success: false,
-      error: "Error de conexión. Verifica tu internet e intenta de nuevo."
+      error: "Errore di connessione. Verifica la tua connessione internet e riprova."
     };
   }
 });
 
 ipcMain.handle("capture-window-screenshot", async (event) => {
   try {
-    console.log('[Screenshot] Solicitando captura de pantalla...');
+    console.log('[Screenshot] Richiesta di uno screenshot...');
 
     const window = BrowserWindow.fromWebContents(event.sender);
     if (!window) {
-      console.error('[Screenshot] No se pudo obtener la ventana desde event.sender');
+      console.error('[Screenshot] Impossibile recuperare la finestra da event.sender.');
 
       const allWindows = BrowserWindow.getAllWindows();
-      console.log('[Screenshot] Ventanas disponibles:', allWindows.length);
+      console.log('[Screenshot] Finestre disponibili:', allWindows.length);
 
       if (allWindows.length > 0) {
         const mainWindow = allWindows[0];
         const image = await mainWindow.webContents.capturePage();
         const dataUrl = `data:image/png;base64,${image.toPNG().toString('base64')}`;
-        console.log('[Screenshot] Captura realizada desde ventana principal');
+        console.log('[Screenshot] Screenshot scattato dalla finestra principale');
         return dataUrl;
       }
 
       return null;
     }
 
-    console.log('[Screenshot] Ventana obtenida, capturando página...');
+    console.log('[Screenshot] Finestra ottenuta, pagina acquisita...');
 
     const image = await window.webContents.capturePage();
 
-    console.log('[Screenshot] Imagen capturada, convirtiendo a base64...');
+    console.log('[Screenshot] Immagine acquisita, conversione in base64...');
 
     const dataUrl = `data:image/png;base64,${image.toPNG().toString('base64')}`;
 
-    console.log('[Screenshot] Captura realizada correctamente, tamaño:', image.getSize());
+    console.log('[Screenshot] Acquisizione riuscita, dimensioni:', image.getSize());
     return dataUrl;
   } catch (error) {
-    console.error('[Screenshot] Error capturando ventana:');
+    console.error('[Screenshot] Errore durante l\'acquisizione della finestra:');
     console.error(error.message);
     console.error(error.stack);
     return null;
@@ -823,7 +823,7 @@ ipcMain.handle("Microsoft-window", async (_event, client_id) => {
 
     return await new Microsoft(client_id).getAuth();
   } catch (error) {
-    console.error('Error al autenticar con Microsoft:', error);
+    console.error('Errore durante l\'autenticazione con Microsoft:', error);
     throw error;
   }
 });
@@ -895,17 +895,17 @@ let client = new rpc.Client({ transport: "ipc" });
 let startedAppTime = Date.now();
 
 ipcMain.on("new-status-discord", async () => {
-  client.login({ clientId: "917866962523152404" });
+  client.login({ clientId: "1390689120413679756" });
   client.on("ready", () => {
     client
       .request("SET_ACTIVITY", {
         pid: process.pid,
         activity: {
-          details: "En el menú de inicio",
+          details: "Nel menu di avvio",
           assets: { large_image: "battly_512", large_text: "Battly Launcher" },
           buttons: [
-            { label: "👥 Discord", url: "https://discord.gg/tecno-bros-885235460178342009" },
-            { label: "⏬ Descargar", url: "https://battlylauncher.com" },
+            { label: "👥 Discord", url: "https://discord.battly.site" },
+            { label: "⏬ Scarica", url: "https://launcher.battly.site" },
           ],
           instance: false,
           timestamps: { start: startedAppTime },
@@ -920,7 +920,7 @@ ipcMain.on("new-status-discord-jugando", async (_event, status) => {
   else if (status.endsWith("-fabric")) status = status.replace("-fabric", "") + " - Fabric";
   if (client) await client.destroy();
   client = new rpc.Client({ transport: "ipc" });
-  client.login({ clientId: "917866962523152404" });
+  client.login({ clientId: "1390689120413679756" });
   client.on("ready", () => {
     client
       .request("SET_ACTIVITY", {
@@ -934,8 +934,8 @@ ipcMain.on("new-status-discord-jugando", async (_event, status) => {
             large_text: "Battly Launcher",
           },
           buttons: [
-            { label: "👥 Discord", url: "https://discord.gg/tecno-bros-885235460178342009" },
-            { label: "⏬ Descargar", url: "https://battlylauncher.com" },
+            { label: "👥 Discord", url: "https://discord.battly.site" },
+            { label: "⏬ Scarica", url: "https://launcher.battly.site" },
           ],
           instance: false,
           timestamps: { start: startedAppTime },
@@ -948,17 +948,17 @@ ipcMain.on("new-status-discord-jugando", async (_event, status) => {
 ipcMain.on("delete-and-new-status-discord", async () => {
   if (client) client.destroy();
   client = new rpc.Client({ transport: "ipc" });
-  client.login({ clientId: "917866962523152404" });
+  client.login({ clientId: "1390689120413679756" });
   client.on("ready", () => {
     client
       .request("SET_ACTIVITY", {
         pid: process.pid,
         activity: {
-          details: "En el menú de inicio",
+          details: "Nel menu di avvio",
           assets: { large_image: "battly_512", large_text: "Battly Launcher" },
           buttons: [
-            { label: "👥 Discord", url: "https://discord.gg/tecno-bros-885235460178342009" },
-            { label: "⏬ Descargar", url: "https://battlylauncher.com" },
+            { label: "👥 Discord", url: "https://discord.battly.site" },
+            { label: "⏬ Scarica", url: "https://launcher.battly.site" },
           ],
           instance: false,
           timestamps: { start: startedAppTime },
@@ -976,13 +976,13 @@ ipcMain.handle("update-app", () => {
   return new Promise(async (resolve) => {
 
     if (dev || !app.isPackaged) {
-      console.log("⚠️ Modo desarrollo: saltar búsqueda de actualizaciones");
+      console.log("⚠️ Modalità sviluppatore: salta il controllo degli aggiornamenti");
 
       setTimeout(() => {
         const w = UpdateWindow.getWindow();
         if (w) w.webContents.send("update-not-available");
       }, 100);
-      return resolve({ error: false, message: "Development mode, updates skipped" });
+      return resolve({ error: false, message: "Modalità sviluppatore, aggiornamenti saltati" });
     }
 
     autoUpdater
@@ -991,7 +991,7 @@ ipcMain.handle("update-app", () => {
       .catch((error) => resolve({ error: true, message: error }));
   });
 });
-const pkgVersion = async () => ({ version: "3.0.1", buildVersion: 1004 });
+const pkgVersion = async () => ({ version: "1.0.8", buildVersion: 1008 });
 ipcMain.handle("update-new-app", async () => {
   console.log(await pkgVersion());
   return new Promise(async (resolve, reject) => {
