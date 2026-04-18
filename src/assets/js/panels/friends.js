@@ -11,6 +11,15 @@ let currentView = 'grid';
 let searchQuery = '';
 let favoritesFriends = new Set();
 
+const { Lang } = require("./assets/js/utils/lang.js");
+const { StringLoader } = require("./assets/js/utils/stringLoader.js");
+let lang;
+new Lang().GetLang().then(lang_ => {
+    lang = lang_;
+}).catch(error => {
+    console.error("Error:", error);
+});
+
 const baseAPIUrl = 'https://api.battlylauncher.com';
 const dataDirectory = process.env.APPDATA || (process.platform == 'darwin' ? `${process.env.HOME}/Library/Application Support` : process.env.HOME);
 
@@ -829,12 +838,12 @@ class Friends {
 
         const account = await this.database?.getSelectedAccount();
         if (account.type !== "battly") {
-            this._renderFriendsError(friendsList, window.stringLoader?.getString("friends.feature_not_available_for_microsoft_accounts") || "Feature not available for Microsoft accounts");
+            this._renderFriendsError(friendsList, lang["feature_not_available_for_microsoft_accounts"]);
             return;
         }
 
         if (!account?.token) {
-            this._renderFriendsError(friendsList, window.stringLoader?.getString("friends.error_loading_friends") || "Error loading friends");
+            this._renderFriendsError(friendsList, lang["error_loading_friends"]);
             return;
         }
 
@@ -849,18 +858,18 @@ class Friends {
             });
             data = await res.json();
         } catch {
-            this._renderFriendsError(friendsList, window.stringLoader?.getString("friends.error_loading_friends") || "Error loading friends");
+            this._renderFriendsError(friendsList, lang["error_loading_friends"]);
             return;
         }
 
         if (data.error) {
-            this._renderFriendsError(friendsList, window.stringLoader?.getString("friends.error_loading_friends") || "Error loading friends");
+            this._renderFriendsError(friendsList, lang["error_loading_friends"]);
             return;
         }
 
         const onlineFriends = (data.amigos || []).filter(f => f.estado !== "offline");
         if (onlineFriends.length === 0) {
-            this._renderFriendsError(friendsList, window.stringLoader?.getString("friends.no_friends_online") || "No friends online");
+            this._renderFriendsError(friendsList, lang["no_friends_online"]);
             return;
         }
 
@@ -873,7 +882,7 @@ class Friends {
                  style="background-image:url('https://api.battlylauncher.com/api/skin/${friend.username}')"></div>
             <div class="online-friend-data">
               <p class="online-friend-name">${friend.username}</p>
-              <p class="online-friend-status">${friend.details ?? 'En el menú principal'}</p>
+              <p class="online-friend-status">${friend.details}</p>
             </div>`;
             fragment.appendChild(friendDiv);
 
@@ -1290,7 +1299,7 @@ class Friends {
                 <div>
                     <p class="modal-card-title" style="color:#fff; font-size: 1.5rem; margin-bottom: 0.5rem;">
                         <i class="fa-solid fa-bell" style="margin-right: 0.5rem;"></i>
-                        ${window.stringLoader?.getString("friends.friendRequests") || 'Friend Requests'}
+                        ${lang.friend_requests || 'Solicitudes de amistad'}
                     </p>
                     <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin: 0;">Gestiona tus solicitudes pendientes</p>
                 </div>

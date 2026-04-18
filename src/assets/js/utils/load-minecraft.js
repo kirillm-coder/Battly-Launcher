@@ -4,7 +4,7 @@ const path = require("path");
 const AnalyticsHelper = require('./assets/js/utils/analyticsHelper.js');
 import * as NBT from "../../../../node_modules/nbtify/dist/index.js";
 import { LoadAPI } from "../utils/loadAPI.js";
-const { loadMinecraftJavaCore } = require('./assets/js/utils/library-loader.js');
+const { Launch } = require("./assets/js/libs/mc/Index");
 import { consoleOutput } from "./logger.js";
 let consoleOutput_ = + consoleOutput;
 import { logger, database, changePanel } from "../utils.js";
@@ -12,15 +12,17 @@ import { CrashReport } from "./crash-report.js";
 const got = require("got");
 const dataDirectory = process.env.APPDATA || (process.platform == "darwin" ? `${process.env.HOME}/Library/Application Support` : process.env.HOME);
 const ShowCrashReport = new CrashReport().ShowCrashReport;
-require('./assets/js/utils/stringLoader.js');
-let langs = {};
+const { Lang } = require("./assets/js/utils/lang.js");
+let langs;
+new Lang().GetLang().then(lang_ => {
+  langs = lang_;
+}).catch(error => {
+  console.error("Error:", error);
+});
 
 class LoadMinecraft {
   async LaunchMinecraft(options) {
-    // Auxiliary function to get strings from stringLoader with fallbacks
-    const getString = (key, fallback = '') => {
-      return window.stringLoader?.getString(`launcher.${key}`) || fallback || key;
-    };
+    console.log("Launching Minecraft...");
     console.log(options);
     const db = await new database().init();
     const BattlyConfig = await new LoadAPI().GetConfig();
@@ -156,17 +158,17 @@ class LoadMinecraft {
               const progressText = document.getElementById("progressText1-download");
               const logTextArea = document.getElementById("battly-logs");
               if (progressText && percent !== 'unknown') {
-                progressText.innerHTML = `☕ ${getString('downloading_java', 'Descargando Java')} ${javaMajorVersion}... ${percent}%`;
+                progressText.innerHTML = `☕ ${langs.downloading_java || 'Descargando Java'} ${javaMajorVersion}... ${percent}%`;
               }
               if (logTextArea) {
                 if (progress.fileIndex === 1 && progress.totalFiles) {
-                  logTextArea.innerHTML += `\n☕ ${getString('downloading_java', 'Descargando Java')} ${javaMajorVersion}...`;
+                  logTextArea.innerHTML += `\n☕ ${langs.downloading_java || 'Descargando Java'} ${javaMajorVersion}...`;
                 }
                 if (percent !== 'unknown') {
 
                   const lines = logTextArea.innerHTML.split('\n');
                   if (lines.length > 0 && lines[lines.length - 1].includes('☕')) {
-                    lines[lines.length - 1] = `☕ ${getString('downloading_java', 'Descargando Java')} ${javaMajorVersion}... ${percent}%`;
+                    lines[lines.length - 1] = `☕ ${langs.downloading_java || 'Descargando Java'} ${javaMajorVersion}... ${percent}%`;
                     logTextArea.innerHTML = lines.join('\n');
                   }
                 }
@@ -257,30 +259,8 @@ class LoadMinecraft {
       handleDownload(version_real, { token: account.token }, dataDirectory);
     }
 
-    // Cargar la librería minecraft-java-core dinámicamente
-    const minecraftLib = await loadMinecraftJavaCore(BattlyConfig);
-    const { Launch } = minecraftLib;
-
     const Launcher = new Launch();
     await Launcher.Launch(options);
-
-    // Inicializar strings con window.stringLoader
-    langs = {
-      libraries: window.stringLoader?.getString("download.libraries") || "libraries",
-      downloading: window.stringLoader?.getString("download.downloading") || "Descargando",
-      downloading_version: window.stringLoader?.getString("download.downloadingVersion") || "Descargando versión",
-      downloading_json_files: window.stringLoader?.getString("download.downloadingJsonFiles") || "Descargando archivos JSON",
-      downloaded_successfully: window.stringLoader?.getString("download.downloadedSuccessfully") || "descargado correctamente",
-      extracting_loader: window.stringLoader?.getString("download.extractingLoader") || "Extrayendo loader",
-      checking: window.stringLoader?.getString("download.checking") || "Comprobando",
-      installing_loader: window.stringLoader?.getString("download.installingLoader") || "Instalando loader",
-      calculating_time: window.stringLoader?.getString("download.calculatingTime") || "calculando tiempo",
-      estimated_time_not_available: window.stringLoader?.getString("download.estimatedTimeNotAvailable") || "Tiempo estimado no disponible",
-      remaining: window.stringLoader?.getString("download.remaining") || "Quedan",
-      remaining_two: window.stringLoader?.getString("download.remainingTwo") || "Queda",
-      applying_patches: window.stringLoader?.getString("download.applyingPatches") || "Aplicando parches",
-      starting_minecraft: window.stringLoader?.getString("download.startingMinecraft") || "Iniciando Minecraft"
-    };
 
     let JSONDownloadShown = false;
     let seMostroExtrayendo_core = false;

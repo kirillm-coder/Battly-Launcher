@@ -1,7 +1,7 @@
 "use strict";
 
 const fs = require("fs");
-const { loadMinecraftJavaCore } = require('./assets/js/utils/library-loader');
+const { Microsoft, Mojang } = require("./assets/js/libs/mc/Index");
 const { ipcRenderer } = require("electron");
 const { getValue, setValue } = require('./assets/js/utils/storage');
 import { Alert } from "./utils/alert.js";
@@ -29,9 +29,18 @@ class Launcher {
     this.initLog();
     console.log("🔄 Iniciando Launcher...");
 
-    const stringLoaderTimer = createPerformanceTimer("String Loader Initialization");
-    await window.ensureStringLoader?.();
-    stringLoaderTimer.end();
+    console.time("LangLauncher");
+    const { Lang } = require("./assets/js/utils/lang.js");
+    const langInstance = new Lang();
+
+    const langTimer = createPerformanceTimer("Language Loading");
+    const lang = await langInstance.GetLang().then((lang) => {
+      langTimer.end();
+      return lang;
+    }).catch((error) => {
+      console.error("Failed to load language", { error: error.message });
+      return null;
+    });
 
     const apiTimer = createPerformanceTimer("API Config Loading");
     await new LoadAPI().GetConfig().then((config) => {
@@ -253,15 +262,8 @@ class Launcher {
         if (acc.type === "microsoft") {
           console.log(`🔄 Autenticando Microsoft (Xbox) – ${acc.name}`);
           showPreload("Autenticando cuenta de Microsoft…");
-          console.log(this.config.client_id);
 
-          // Cargar dinámicamente minecraft-java-core
-          const minecraftLib = await loadMinecraftJavaCore(this.config);
-          const { Microsoft } = minecraftLib;
           const refresh = await new Microsoft(this.config.client_id).refresh(acc);
-
-          console.log(`🔄 Cuenta Microsoft actualizada – ${acc.name}`);
-          console.log(refresh);
           if (refresh?.error) throw new Error(refresh.errorMessage);
 
           const updatedAccount = {

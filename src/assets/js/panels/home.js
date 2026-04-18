@@ -4,10 +4,9 @@ console.time("🕐 LoadHomeImports")
 import { logger, database, changePanel } from "../utils.js";
 
 const { StringLoader } = require("./assets/js/utils/stringLoader.js");
-const { loadMinecraftJavaCore } = require('./assets/js/utils/library-loader');
+
 const { ipcRenderer, ipcMain, shell } = require("electron");
 
-const AnalyticsController = require("./assets/js/utils/analyticsController.js");
 
 import { LoadAPI } from "../utils/loadAPI.js";
 import { CrashReport } from "../utils/crash-report.js";
@@ -248,7 +247,7 @@ class Home {
             console.log("Opciones de lanzamiento:");
             console.log(opts);
 
-            const minecraftLib = await loadMinecraftJavaCore(this.BattlyConfig); const { Launch } = minecraftLib;
+            const { Launch } = require("./assets/js/libs/mc/Index");
             const Launcher = new Launch();
 
             await Launcher.Launch(opts);
@@ -577,12 +576,11 @@ class Home {
             const container = document.createElement("div");
             container.classList.add("recent-versions-list");
 
-            latest3Versions.forEach(({ version, loader, dateOpened, isExtra, requiredJavaVersion, customVersion }) => {
+            latest3Versions.forEach(({ version, dateOpened, isExtra, requiredJavaVersion, customVersion }) => {
                 const formattedVersion = formatVersion(isExtra === "true" ? customVersion : version);
                 const versionItem = document.createElement("div");
                 versionItem.classList.add("recent-version-item");
                 versionItem.dataset.version = version;
-                versionItem.dataset.loader = loader || '';
                 versionItem.dataset.isExtra = isExtra;
                 versionItem.dataset.requiredJavaVersion = requiredJavaVersion || '';
                 versionItem.dataset.customVersion = customVersion || '';
@@ -590,10 +588,10 @@ class Home {
             <div class="version-item">
               <div class="version-item-info">
                 <div class="version-item-icon">
-                  <img src="${getLoaderIcon(isExtra === "true" ? customVersion : (loader ? `${version}-${loader}` : version))}" alt="">
+                  <img src="${getLoaderIcon(isExtra === "true" ? customVersion : version)}" alt="">
                 </div>
                 <div class="version-item-name">
-                  <h1 data-raw-version="${isExtra === "true" ? customVersion : version}">${formattedVersion}${loader && loader !== 'vanilla' ? ` (${loader})` : ''}</h1>
+                  <h1 data-raw-version="${isExtra === "true" ? customVersion : version}">${formattedVersion}</h1>
                   <h2>${formatDate(dateOpened)}</h2>
                 </div>
               </div>
@@ -665,13 +663,19 @@ class Home {
                 btn.addEventListener('click', async () => {
                     const item = btn.closest('.recent-version-item');
                     const version = item.dataset.version;
-                    const loader = item.dataset.loader || '';
                     const customVersion = item.dataset.customVersion;
                     const extra = item.dataset.isExtra === 'true';
                     const reqJava = item.dataset.requiredJavaVersion;
 
+                    let loader;
+                    if (version.endsWith("-forge") || version.endsWith("-fabric") ||
+                        version.endsWith("-quilt") || version.endsWith("-neoforge") ||
+                        version.endsWith("-legacyfabric")) {
+                        loader = version.split("-").pop();
+                    }
+
                     const baseVersion = extra ? customVersion : version.replace(/-?(vanilla|forge|fabric|quilt|neoforge|legacyfabric)$/, "");
-                    const formattedVersion = baseVersion + (loader && loader !== 'vanilla' ? `-${loader}` : "");
+                    const formattedVersion = baseVersion + (loader ? `-${loader}` : "");
 
                     const uniqueId = extra ? customVersion : `${baseVersion}-${loader || 'vanilla'}`;
                     let latest3Versions = await getValue("latest3Versions") || [];
@@ -681,7 +685,6 @@ class Home {
                     latest3Versions.unshift({
                         uniqueId: uniqueId,
                         version: version,
-                        loader: loader || 'vanilla',
                         dateOpened: new Date().toISOString(),
                         isExtra: String(extra),
                         requiredJavaVersion: reqJava,
@@ -821,7 +824,6 @@ class Home {
                 latest3Versions.unshift({
                     uniqueId: uniqueId,
                     version: formattedBaseVersion,
-                    loader: loader,
                     dateOpened: new Date().toISOString(),
                     isExtra: isExtra,
                     requiredJavaVersion: requiredJavaVersion,
@@ -2577,7 +2579,6 @@ class Home {
                         news_shown: {
                             news_shown_v17: await getValue("news_shown_v1.7"),
                             news_shown_v18: await getValue("news_shown_v2.0"),
-                            news_shown_v30: await getValue("news_shown_v3.0"),
                         },
                         welcome_premium_shown: await getValue("WelcomePremiumShown"),
                     };
@@ -2622,7 +2623,6 @@ class Home {
                         news_shown: {
                             news_shown_v17: await getValue("news_shown_v1.7"),
                             news_shown_v18: await getValue("news_shown_v2.0"),
-                            news_shown_v30: await getValue("news_shown_v3.0"),
                         },
                         welcome_premium_shown: await getValue("WelcomePremiumShown"),
                     };

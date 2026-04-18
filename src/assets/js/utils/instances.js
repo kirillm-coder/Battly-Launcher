@@ -5,8 +5,8 @@ import { Alert } from "./alert.js";
 import { LoadAPI } from "../utils/loadAPI.js";
 
 const { ipcRenderer, shell } = require('electron');
-require("./assets/js/utils/stringLoader.js");
-const { loadMinecraftJavaCore } = require('./assets/js/utils/library-loader');
+const { Lang } = require("./assets/js/utils/lang.js");
+const { Launch, Mojang } = require("./assets/js/libs/mc/Index");
 const pkg = require('../package.json');
 const fs = require('fs');
 const path = require('path');
@@ -297,59 +297,16 @@ class Instances {
         const VersionsMojang = await loadAPI.GetVersionsMojang();
         const database_ = await new database().init();
         const config_ = BattlyConfig;
+        const langInstance = new Lang();
+        const langs = await langInstance.GetLang();
 
-        await window.ensureStringLoader?.();
-        this.langs = window.stringLoader || {};
+        this.langs = langs;
         this.Versions = Versions;
         this.VersionsMojang = VersionsMojang;
 
         const instanciasBtn = document.getElementById("instancias-btn");
 
         instanciasBtn.addEventListener("click", async () => {
-
-            // Load all localized strings
-            const langs = {
-                instances: window.stringLoader?.getString("instances.instances") || "Instancias",
-                welcome_instances: window.stringLoader?.getString("instances.welcomeInstances") || "Bienvenido al gestor de instancias",
-                loading: window.stringLoader?.getString("common.loading") || "Cargando",
-                recommended: window.stringLoader?.getString("instances.recommended") || "Recomendado",
-                latest: window.stringLoader?.getString("instances.latest") || "Última versión",
-                no_builds: window.stringLoader?.getString("instances.noBuilds") || "Sin builds disponibles",
-                open_instance: window.stringLoader?.getString("instances.openInstance") || "Abrir instancia",
-                open_instance_folder: window.stringLoader?.getString("instances.openInstanceFolder") || "Abrir carpeta",
-                delete_instance: window.stringLoader?.getString("instances.deleteInstance") || "Eliminar",
-                folder_opened: window.stringLoader?.getString("instances.folderOpened") || "Carpeta abierta",
-                are_you_sure: window.stringLoader?.getString("settings.are_you_sure") || "¿Estás seguro?",
-                are_you_sure_text: window.stringLoader?.getString("settings.are_you_sure_text") || "Esta acción no se puede deshacer",
-                yes_delete: window.stringLoader?.getString("settings.yes_delete") || "Sí, eliminar",
-                no_cancel: window.stringLoader?.getString("settings.no_cancel") || "No, cancelar",
-                instance_deleted_correctly: window.stringLoader?.getString("instances.instanceDeletedCorrectly") || "Instancia eliminada correctamente",
-                create_instance: window.stringLoader?.getString("instances.createInstance") || "Crear instancia",
-                edit_instance: window.stringLoader?.getString("instances.editInstance") || "Editar instancia",
-                instance_name: window.stringLoader?.getString("instances.instanceName") || "Nombre de la instancia",
-                instance_description: window.stringLoader?.getString("instances.instanceDescription") || "Descripción",
-                instance_image: window.stringLoader?.getString("instances.instanceImage") || "Imagen de la instancia",
-                select_a_file: window.stringLoader?.getString("common.selectAFile") || "Selecciona un archivo",
-                instance_version: window.stringLoader?.getString("instances.instanceVersion") || "Versión",
-                instance_version2: window.stringLoader?.getString("instances.instanceVersion2") || "Selecciona la versión de Minecraft",
-                save_instance: window.stringLoader?.getString("instances.saveInstance") || "Guardar",
-                instance_saved_correctly: window.stringLoader?.getString("instances.instanceSavedCorrectly") || "Instancia guardada correctamente",
-                fill_all_fields: window.stringLoader?.getString("instances.fillAllFields") || "Rellena todos los campos",
-                name: window.stringLoader?.getString("common.name") || "Nombre",
-                description: window.stringLoader?.getString("common.description") || "Descripción",
-                instance_created_correctly: window.stringLoader?.getString("instances.instanceCreatedCorrectly") || "Instancia creada correctamente",
-                preparing_instance: window.stringLoader?.getString("instances.preparingInstance") || "Preparando instancia",
-                downloading_version: window.stringLoader?.getString("instances.downloadingVersion") || "Descargando versión",
-                installing_loader: window.stringLoader?.getString("instances.installingLoader") || "Instalando loader",
-                downloading_java: window.stringLoader?.getString("instances.downloadingJava") || "Descargando Java",
-                downloading_loader: window.stringLoader?.getString("instances.downloadingLoader") || "Descargando loader",
-                checking_instance: window.stringLoader?.getString("instances.checkingInstance") || "Comprobando",
-                downloading_assets: window.stringLoader?.getString("instances.downloadingAssets") || "Descargando assets",
-                checking_assets: window.stringLoader?.getString("instances.checkingAssets") || "Comprobando assets",
-                checking_java: window.stringLoader?.getString("instances.checkingJava") || "Comprobando Java",
-                installing_java: window.stringLoader?.getString("instances.installingJava") || "Instalando Java",
-                downloading: window.stringLoader?.getString("common.downloading") || "Descargando"
-            };
 
             const { modal, modalCard, modalHeader, closeBtn, listIcon, gridIcon } = createModalBase({
                 titleText: `<i class="fa-solid fa-folder"></i> ${langs.instances}`
@@ -449,7 +406,7 @@ class Instances {
                         style: { margin: "5px" }
                     });
                     const openIcon = createEl("i", { classes: ["fa-solid", "fa-square-up-right"] });
-                    const openText = createEl("span", { textContent: langs.open_instance, classes: ["btn-text"] });
+                    const openText = createEl("span", { textContent: this.langs.open_instance, classes: ["btn-text"] });
                     openButton.append(openIcon, openText);
 
                     const openFolderButton = createEl("button", {
@@ -457,7 +414,7 @@ class Instances {
                         style: { margin: "5px" }
                     });
                     const folderIcon = createEl("i", { classes: ["fa-solid", "fa-folder-open"] });
-                    const folderText = createEl("span", { textContent: langs.open_instance_folder, classes: ["btn-text"] });
+                    const folderText = createEl("span", { textContent: this.langs.open_instance_folder, classes: ["btn-text"] });
                     openFolderButton.append(folderIcon, folderText);
 
                     const deleteButton = createEl("button", {
@@ -465,7 +422,7 @@ class Instances {
                         style: { margin: "5px" }
                     });
                     const deleteIcon = createEl("i", { classes: ["fa-solid", "fa-trash"] });
-                    const deleteText = createEl("span", { textContent: langs.delete_instance, classes: ["btn-text"] });
+                    const deleteText = createEl("span", { textContent: this.langs.delete_instance, classes: ["btn-text"] });
                     deleteButton.append(deleteIcon, deleteText);
 
                     cardFooter.append(openButton, openFolderButton, deleteButton);
@@ -509,18 +466,18 @@ class Instances {
                     openFolderButton.addEventListener("click", () => {
                         const instanceFolder = path.join(instancesPath, instanceDir);
                         shell.openPath(instanceFolder.replace(/\//g, "\\")).then(() => {
-                            new Alert().ShowAlert({ icon: "success", title: langs.folder_opened });
+                            new Alert().ShowAlert({ icon: "success", title: this.langs.folder_opened });
                         });
                     });
 
                     deleteButton.addEventListener("click", async () => {
                         try {
                             await modal_.ask({
-                                title: langs.are_you_sure,
-                                text: langs.are_you_sure_text,
+                                title: this.langs.are_you_sure,
+                                text: this.langs.are_you_sure_text,
                                 showCancelButton: true,
-                                confirmButtonText: langs.yes_delete,
-                                cancelButtonText: langs.no_cancel,
+                                confirmButtonText: this.langs.yes_delete,
+                                cancelButtonText: this.langs.no_cancel,
                                 confirmButtonColor: "#3e8ed0",
                                 cancelButtonColor: "#d33",
                                 preConfirm: () => true
@@ -530,7 +487,7 @@ class Instances {
                             if (card.nextSibling && card.nextSibling.tagName === "BR") card.nextSibling.remove();
                             fs.rmdirSync(path.join(instancesPath, instanceDir), { recursive: true });
 
-                            new Alert().ShowAlert({ icon: "success", title: langs.instance_deleted_correctly });
+                            new Alert().ShowAlert({ icon: "success", title: this.langs.instance_deleted_correctly });
                         } catch (_) { /* cancel */ }
                     });
 
@@ -604,9 +561,6 @@ class Instances {
                             ],
                         };
 
-                        // Cargar dinámicamente minecraft-java-core
-                        const minecraftLib = await loadMinecraftJavaCore(BattlyConfig);
-                        const { Launch } = minecraftLib;
                         const launch = new Launch();
                         launch.Launch(launchOpts);
 
@@ -646,18 +600,7 @@ class Instances {
     }
 
     showEditInstanceModal(instanceData, instanceDir, cardTitleSpan, imgEl, cardDescription) {
-        const editInstanceStr = window.stringLoader?.getString("instances.editInstance") || "Editar instancia";
-        const instanceNameStr = window.stringLoader?.getString("instances.instanceName") || "Nombre de la instancia";
-        const instanceDescStr = window.stringLoader?.getString("instances.instanceDescription") || "Descripción";
-        const instanceImageStr = window.stringLoader?.getString("instances.instanceImage") || "Imagen de la instancia";
-        const instanceVersionStr = window.stringLoader?.getString("instances.instanceVersion") || "Versión";
-        const instanceVersion2Str = window.stringLoader?.getString("instances.instanceVersion2") || "Selecciona la versión de Minecraft";
-        const saveInstanceStr = window.stringLoader?.getString("instances.saveInstance") || "Guardar";
-        const selectFileStr = window.stringLoader?.getString("common.selectAFile") || "Selecciona un archivo";
-        const instanceSavedStr = window.stringLoader?.getString("instances.instanceSavedCorrectly") || "Instancia guardada correctamente";
-        const fillAllFieldsStr = window.stringLoader?.getString("instances.fillAllFields") || "Rellena todos los campos";
-
-        const { modal } = createModalBase({ titleText: editInstanceStr });
+        const { modal } = createModalBase({ titleText: this.langs.edit_instance });
         const modalCard = modal.querySelector(".modal-card");
 
         const modalCardBody = createEl("section", {
@@ -665,7 +608,7 @@ class Instances {
             style: { backgroundColor: "#0f1623" }
         });
 
-        const nameLabel = createEl("p", { style: { color: "#fff" }, textContent: instanceNameStr });
+        const nameLabel = createEl("p", { style: { color: "#fff" }, textContent: this.langs.instance_name });
         const nameInput = createEl("input", {
             classes: ["input", "is-info"],
             attributes: { type: "text" },
@@ -673,14 +616,14 @@ class Instances {
         });
         nameInput.value = instanceData.name;
 
-        const descriptionLabel = createEl("p", { style: { color: "#fff" }, textContent: instanceDescStr });
+        const descriptionLabel = createEl("p", { style: { color: "#fff" }, textContent: this.langs.instance_description });
         const descriptionTextarea = createEl("textarea", {
             classes: ["textarea", "is-info"],
             style: { fontFamily: "Poppins", height: "20px", fontWeight: "500", fontSize: "12px" }
         });
         descriptionTextarea.value = instanceData.description;
 
-        const imageLabel = createEl("p", { style: { color: "#fff" }, textContent: instanceImageStr });
+        const imageLabel = createEl("p", { style: { color: "#fff" }, textContent: this.langs.instance_image });
         const imageContainer = createEl("div", { style: { display: "flex" } });
         const imageFigure = createEl("figure", { classes: ["image", "is-64x64"], style: { marginRight: "10px" } });
         const image = createEl("img", { attributes: { src: instanceData.image }, style: { borderRadius: "5px" } });
@@ -692,18 +635,18 @@ class Instances {
         const fileIcon = createEl("span", { classes: ["file-icon"] });
         const uploadIcon = createEl("i", { classes: ["fas", "fa-cloud-upload-alt"] });
         fileIcon.appendChild(uploadIcon);
-        const fileLabelText = createEl("span", { style: { fontSize: "10px" }, textContent: selectFileStr });
+        const fileLabelText = createEl("span", { style: { fontSize: "10px" }, textContent: this.langs.select_a_file });
         fileCta.append(fileIcon, fileLabelText);
         fileLabel.append(fileInput, fileCta);
         fileContainer.appendChild(fileLabel);
         imageContainer.append(imageFigure, fileContainer);
 
-        const versionLabel = createEl("p", { style: { color: "#fff" }, textContent: instanceVersionStr });
+        const versionLabel = createEl("p", { style: { color: "#fff" }, textContent: this.langs.instance_version });
 
         const adv = `
       <article class="message is-danger" style="margin-bottom: 10px;">
         <div class="message-body" style="padding: 0.5rem 0.8rem">
-          <p style="font-size: 13px;">${instanceVersion2Str}</p>
+          <p style="font-size: 13px;">${this.langs.instance_version2}</p>
         </div>
       </article>
     `;
@@ -728,7 +671,7 @@ class Instances {
         const saveButton = createEl("button", {
             classes: ["button", "is-info", "is-responsive"],
             style: { fontSize: "12px", fontFamily: "Poppins", color: "#fff", marginLeft: "0px" },
-            textContent: saveInstanceStr
+            textContent: this.langs.save_instance
         });
         modalCardFoot.appendChild(saveButton);
         modal.querySelector(".modal-card").append(modalCardBody, modalCardFoot);
@@ -768,14 +711,14 @@ class Instances {
                 : instanceData.version);
 
         setTimeout(async () => {
-            await updateLoaderOptions(versionOptions, versionOptionsVersion, {});
+            await updateLoaderOptions(versionOptions, versionOptionsVersion, this.langs);
             if (instanceData.loaderVersion) {
                 versionOptionsVersion.value = instanceData.loaderVersion;
             }
         }, 500);
 
         versionSelectContainer.addEventListener("change", async () => {
-            await updateLoaderOptions(versionOptions, versionOptionsVersion, {});
+            await updateLoaderOptions(versionOptions, versionOptionsVersion, this.langs);
         });
 
         fileInput.addEventListener("change", () => {
@@ -816,9 +759,9 @@ class Instances {
                 cardTitleSpan.textContent = name;
                 imgEl.src = imagen;
                 cardDescription.textContent = description;
-                new Alert().ShowAlert({ icon: "success", title: instanceSavedStr });
+                new Alert().ShowAlert({ icon: "success", title: this.langs.instance_saved_correctly });
             } else {
-                new Alert().ShowAlert({ icon: "error", title: fillAllFieldsStr });
+                new Alert().ShowAlert({ icon: "error", title: this.langs.fill_all_fields });
             }
         });
     }
@@ -1131,7 +1074,6 @@ class Instances {
 
         let inicio = false;
         launch.on("data", (e) => {
-            console.log(e);
             if (!inicio) {
                 if (e.includes("Launching wrapped minecraft") || e.includes("Setting user: ")) {
                     preparingModal.remove();

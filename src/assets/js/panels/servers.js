@@ -10,7 +10,7 @@ const axios = require("axios");
 const crypto = require("crypto");
 const pidusage = require("pidusage");
 const util = require("minecraft-server-util");
-const { loadMinecraftJavaCore } = require('./assets/js/utils/library-loader');
+const { Launch } = require("./assets/js/libs/mc/Index");
 import { AskModal } from "../utils/askModal.js";
 import { wsLatency } from "../utils/latency.js";
 import { Alert } from "../utils/alert.js";
@@ -790,11 +790,7 @@ class Servers {
         const proc = require("child_process").spawn(
           javaExe,
           ["-jar", `${this.serverDir}/server.jar`, "nogui"],
-          {
-            cwd: this.serverDir,
-            stdio: "ignore",
-            windowsHide: true
-          }
+          { cwd: this.serverDir, stdio: "ignore" }
         );
 
         const propsPath = path.join(this.serverDir, "server.properties");
@@ -927,7 +923,6 @@ class Servers {
     this.refreshPropertiesPanel();
     this.initHistoryWatcher();
     this.refreshLists();
-    this.refreshLogs();
     document.querySelector(".b-servers-main-container").style.display = "flex";
     const suffix = this.selectedRegion === "eu" ? ".battly.eu" : ".battly.org";
     document.querySelector(".b-servers-content-header h1")
@@ -1110,156 +1105,6 @@ class Servers {
   }
 
 
-  refreshLogs() {
-    const logsList = document.getElementById('logs-list');
-    if (!logsList || !this.serverDir) return;
-
-    const logsDir = path.join(this.serverDir, 'logs');
-
-    if (!fs.existsSync(logsDir)) {
-      logsList.innerHTML = '<li class="has-text-centered" style="padding: 20px;">No hay logs disponibles</li>';
-      return;
-    }
-
-    try {
-      let files = fs.readdirSync(logsDir, { withFileTypes: true })
-        .filter(f => f.isFile() && (f.name.endsWith('.log') || f.name.endsWith('.log.gz')))
-        .map(f => {
-          const fullPath = path.join(logsDir, f.name);
-          const stats = fs.statSync(fullPath);
-          return {
-            name: f.name,
-            path: fullPath,
-            size: stats.size,
-            mtime: stats.mtimeMs
-          };
-        })
-        .sort((a, b) => b.mtime - a.mtime);
-
-      // Agregar latest.log si existe en la raíz
-      const latestLog = path.join(this.serverDir, 'latest.log');
-      if (fs.existsSync(latestLog)) {
-        const stats = fs.statSync(latestLog);
-        files.unshift({
-          name: 'latest.log',
-          path: latestLog,
-          size: stats.size,
-          mtime: stats.mtimeMs
-        });
-      }
-
-      if (files.length === 0) {
-        logsList.innerHTML = '<li class="has-text-centered" style="padding: 20px;">No hay logs disponibles</li>';
-        return;
-      }
-
-      logsList.innerHTML = files.map(file => {
-        const isCrash = file.name.includes('crash');
-        const sizeKB = (file.size / 1024).toFixed(2);
-        const date = new Date(file.mtime).toLocaleString();
-        const icon = isCrash ? 'fa-exclamation-triangle' : 'fa-file-alt';
-        const btnClass = isCrash ? 'is-danger' : 'is-link';
-
-        return `
-          <li>
-            <i class="fa ${icon}"></i> ${file.name} 
-            <span style="opacity: 0.6; font-size: 0.85em;">(${sizeKB} KB - ${date})</span>
-            <div style="display: inline-flex; gap: 5px; margin-left: 10px;">
-              <button class="button is-small ${btnClass}" onclick="battlyServersInstance.downloadLog('${file.path.replace(/\\/g, '\\\\')}', '${file.name}')">
-                <i class="fa fa-download"></i> Descargar
-              </button>
-              <button class="button is-small is-info" onclick="battlyServersInstance.viewLog('${file.path.replace(/\\/g, '\\\\')}', '${file.name}')">
-                <i class="fa fa-eye"></i> Ver
-              </button>
-            </div>
-          </li>
-        `;
-      }).join('');
-
-    } catch (error) {
-      console.error('Error al cargar logs:', error);
-      logsList.innerHTML = '<li class="has-text-centered" style="padding: 20px; color: #f14668;">Error al cargar logs</li>';
-    }
-  }
-
-  downloadLog(logPath, fileName) {
-    if (electronShell) {
-      electronShell.showItemInFolder(logPath);
-    } else {
-      alert('Descarga disponible sólo en modo escritorio (Electron)');
-    }
-  }
-
-  viewLog(logPath, fileName) {
-    try {
-      let content = '';
-
-      if (fileName.endsWith('.gz')) {
-        // Si es .gz, necesitaríamos descomprimirlo - por ahora mostramos mensaje
-        new Alert().ShowAlert({
-          icon: 'info',
-          title: 'Archivo comprimido',
-          text: 'Este archivo está comprimido. Descárgalo para verlo con una herramienta externa.'
-        });
-        return;
-      }
-
-      content = fs.readFileSync(logPath, 'utf8');
-
-      // Limitar a las últimas 5000 líneas para no sobrecargar
-      const lines = content.split('\n');
-      if (lines.length > 5000) {
-        content = '... (primeras líneas omitidas) ...\n\n' + lines.slice(-5000).join('\n');
-      }
-
-      const modal = this.ensureLogViewerModal();
-      const textarea = modal.querySelector('#logViewerTextarea');
-      const title = modal.querySelector('.modal-card-title');
-
-      title.textContent = `Log: ${fileName}`;
-      textarea.value = content;
-
-      modal.classList.add('is-active');
-
-      // Auto-scroll al final
-      setTimeout(() => {
-        textarea.scrollTop = textarea.scrollHeight;
-      }, 100);
-
-    } catch (error) {
-      console.error('Error al leer log:', error);
-      new Alert().ShowAlert({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo leer el archivo de log'
-      });
-    }
-  }
-
-  ensureLogViewerModal() {
-    let modal = document.getElementById('logViewerModal');
-    if (!modal) {
-      const tpl = `<div class="modal" id="logViewerModal">
-        <div class="modal-background" onclick="document.getElementById('logViewerModal').classList.remove('is-active')"></div>
-        <div class="modal-card" style="width:85%;max-width:1200px;height:80vh;">
-          <header class="modal-card-head">
-            <p class="modal-card-title">Visor de Log</p>
-            <button class="delete" aria-label="close" onclick="document.getElementById('logViewerModal').classList.remove('is-active')"></button>
-          </header>
-          <section class="modal-card-body" style="padding: 0;">
-            <textarea id="logViewerTextarea" readonly style="width: 100%; height: 65vh; font-family: 'Courier New', monospace; font-size: 12px; padding: 15px; background: #1e1e1e; color: #d4d4d4; border: none; resize: none;"></textarea>
-          </section>
-          <footer class="modal-card-foot" style="justify-content:flex-end;">
-            <button class="button" onclick="document.getElementById('logViewerModal').classList.remove('is-active')">Cerrar</button>
-          </footer>
-        </div>
-      </div>`;
-      document.body.insertAdjacentHTML('beforeend', tpl);
-      modal = document.getElementById('logViewerModal');
-    }
-    return modal;
-  }
-
   setupCharts() {
     const c1 = document.getElementById("cpuChart").getContext("2d");
     const c2 = document.getElementById("ramChart").getContext("2d");
@@ -1437,11 +1282,7 @@ class Servers {
     this.serverProc = require("child_process").spawn(
       javaExe,
       javaArgs,
-      {
-        cwd: this.serverDir,
-        stdio: ['pipe', 'pipe', 'pipe'],
-        windowsHide: true
-      }
+      { cwd: this.serverDir, windowsHide: true }
     );
 
     await this.tryCreateTunnel();
@@ -1590,10 +1431,7 @@ class Servers {
     const frpc = await this.ensureFrpc();
     const ini = await this.writeFrpcIni(cfg, token);
     this.frpcProc = require("child_process")
-      .spawn(frpc, ["-c", ini], {
-        stdio: "ignore",
-        windowsHide: true
-      });
+      .spawn(frpc, ["-c", ini], { stdio: "inherit" });
     this.frpcProc.unref();
   }
 
@@ -1681,10 +1519,6 @@ remote_port = ${cfg.remote_port}`.trim();
     const urlpkg = pkg.user ? `${pkg.url}/${pkg.user}` : pkg.url;
     let account = await this.database?.getSelectedAccount();
     const ram = (await this.database.get("1234", "ram")).value;
-
-    // Cargar dinámicamente minecraft-java-core
-    const minecraftLib = await loadMinecraftJavaCore(this.config);
-    const { Launch } = minecraftLib;
     const launch = new Launch();
     launch.Launch({
       url:
@@ -2017,23 +1851,23 @@ remote_port = ${cfg.remote_port}`.trim();
       const card = document.createElement('div');
       card.className = 'share-friend-card';
       card.dataset.friendName = friend.nombre;
-      card.dataset.friendUsername = friend.username;
+      card.dataset.friendUuid = friend.uuid;
 
       const statusText = friend.estado === 'online' ? 'En línea' :
         friend.estado === 'ingame' ? 'Jugando' : 'Conectado';
 
       card.innerHTML = `
         <img class="share-friend-avatar" 
-             src="https://api.battlylauncher.com/api/v2/skin/${friend.username}.png" 
-             alt="${friend.username}">
+             src="https://mc-heads.net/avatar/${friend.uuid || friend.nombre}/64" 
+             alt="${friend.nombre}">
         <div class="share-friend-info">
-          <div class="share-friend-name is-inter">${friend.username}</div>
+          <div class="share-friend-name is-inter">${friend.nombre}</div>
           <div class="share-friend-status is-inter">
             <span class="share-friend-status-dot"></span>
             ${statusText}
           </div>
         </div>
-        <button class="button is-small share-friend-btn is-inter" data-friend-username="${friend.username}">
+        <button class="button is-small share-friend-btn is-inter" data-friend-uuid="${friend.uuid}">
           <i class="fa fa-paper-plane"></i> Invitar
         </button>
       `;
@@ -2066,7 +1900,7 @@ remote_port = ${cfg.remote_port}`.trim();
           'Authorization': `Bearer ${account.token}`
         },
         body: JSON.stringify({
-          friendUsername: friend.username,
+          friendUuid: friend.uuid,
           serverName: `${this.subdomain}${suffix}`,
           serverVersion: this.versionId,
           subdomain: this.subdomain,

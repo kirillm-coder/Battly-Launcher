@@ -11,8 +11,7 @@ class BattlyProfileSystem {
         }
 
         try {
-            const selectedAccount = await getValue("selected-account");
-            const token = await getValue("accounts").find(acc => acc.token === selectedAccount) || null;
+            const token = localStorage.getItem('battly_token');
             const response = await fetch(`${this.apiUrl}/api/v2/users/profile/${userId}`, {
                 headers: token ? { 'Authorization': `Bearer ${token}` } : {}
             });

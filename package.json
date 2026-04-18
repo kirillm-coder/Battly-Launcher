@@ -1,8 +1,8 @@
 {
   "name": "battly-launcher",
   "productname": "Battly Launcher",
-  "version": "1.0.8",
-  "buildVersion": "1008",
+  "version": "1.0.9",
+  "buildVersion": "1009",
   "description": "",
   "main": "src/app.js",
   "author": "OmegaMC Studios",

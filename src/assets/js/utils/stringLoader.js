@@ -75,7 +75,7 @@ class StringLoader {
         try {
             // Intentar cargar desde la API primero
             const baseURL = 'https://api.battlylauncher.com';
-            const apiUrl = `${baseURL}/launcher/langs/${language}`;
+            const apiUrl = `${baseURL}/api/v2/launcher/strings/${language}`;
 
             const response = await fetch(apiUrl);
 
@@ -111,10 +111,14 @@ class StringLoader {
         }
     }
 
-    getString(path, replacements = null) {
+    getString(path) {
         if (!this.strings) {
             console.warn('⚠️ StringLoader: Strings not loaded yet, returning path as fallback');
             return path;
+        }
+
+        if (this.stringCache.has(path)) {
+            return this.stringCache.get(path);
         }
 
         const keys = path.split('.');
@@ -125,16 +129,12 @@ class StringLoader {
                 value = value[key];
             } else {
                 console.warn(`⚠️ StringLoader: String not found - ${path}`);
+                this.stringCache.set(path, path);
                 return path;
             }
         }
 
-        if (replacements && typeof value === 'string') {
-            for (const [key, val] of Object.entries(replacements)) {
-                value = value.replace(new RegExp(`\\{${key}\\}`, 'g'), val);
-            }
-        }
-
+        this.stringCache.set(path, value);
         return value;
     }
 
@@ -291,17 +291,12 @@ window.ensureStringLoader = async function () {
     return window.stringLoader;
 };
 
-window.getString = function (path, fallback = null) {
-    if (!window.stringLoader || !window.stringLoader.strings) {
+window.getString = function (path) {
+    if (!window.stringLoader.strings) {
         console.warn('StringLoader not initialized, call ensureStringLoader() first');
-        return fallback || path;
+        return path;
     }
-    const result = window.stringLoader.getString(path);
-    // Si el resultado es el mismo que el path, significa que no se encontró
-    if (result === path && fallback) {
-        return fallback;
-    }
-    return result;
+    return window.stringLoader.getString(path);
 };
 
 /**

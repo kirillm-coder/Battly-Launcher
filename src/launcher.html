@@ -42,6 +42,14 @@
 
 <body class="hide">
   <div class="overlay">
+    <div id="panelbig">
+      <div class="panelalert" id="alert-panel">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png"
+          id="alert-panel-icon" />
+        <div class="panelalert-text" id="alert-panel-text"></div>
+      </div>
+    </div>
   </div>
   <video autoplay muted loop id="video-background">
     <source src="" type="video/mp4">
@@ -49,16 +57,13 @@
   <div class="dragbar"></div>
   <div class="titlebar" id="header-frame" role="banner">
     <div class="title no-drag">
-      Battly Launcher - v1.0.7
+      Battly Launcher - v1.0.9
       <!--<span id="header-text-to-add" class="no-drag header-text-to-add"></span>-->
     </div>
-    <div style="display: flex; gap: 10px; align-items: center;">
-      <p id="disable-music">Disattiva la musica di sottofondo</p>
-      <div class=" window-controls">
-        <button id="minimize" class="win-btn no-drag" aria-label="Minimizar"></button>
-        <button id="maximize" class="win-btn no-drag" aria-label="Maximizar"></button>
-        <button id="close" class="win-btn no-drag" aria-label="Cerrar"></button>
-      </div>
+    <div class="window-controls">
+      <button id="minimize" class="win-btn no-drag" aria-label="Minimizar"></button>
+      <button id="maximize" class="win-btn no-drag" aria-label="Maximizar"></button>
+      <button id="close" class="win-btn no-drag" aria-label="Cerrar"></button>
     </div>
   </div>
 

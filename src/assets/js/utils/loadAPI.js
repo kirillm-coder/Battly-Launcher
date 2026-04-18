@@ -4,6 +4,7 @@ const fsp = fs.promises;
 const path = require("path");
 const https = require("https");
 const { getValue, setValue } = require("./assets/js/utils/storage");
+const { Lang } = require("./assets/js/utils/lang.js");
 
 const CONFIG_URL = "https://api.battlylauncher.com/v3/launcher/config-launcher/config.json";
 const VERSIONS_URL = "https://api.battlylauncher.com/v3/battlylauncher/launcher/config-launcher/versions.json";
@@ -95,7 +96,7 @@ function setLoadingText(keyOrText) {
     if (!el) return;
     el.innerHTML = keyOrText;
 }
-async function applyChristmasUI(config, { startup }) {
+function applyChristmasUI(config, { startup, lang }) {
     if (!config || typeof document === "undefined") return;
     const snow = getEl("christmas-snowflakes");
     const up = getEl("rectangulo-arriba");
@@ -109,53 +110,13 @@ async function applyChristmasUI(config, { startup }) {
         if (down) down.src = "assets/images/icons/pengu_christmas.gif";
         if (snow) snow.style.display = "";
     }
-
-    let currentAudio = null;
-
-    if (config.christmasTheme?.songEnabled && !songStarted && !await getValue("christmas-music-disabled")) {
+    if (config.christmasTheme?.songEnabled && !songStarted) {
         try {
-            currentAudio = new Audio("assets/audios/jingle-bells.mp3");
-            currentAudio.volume = 0.5;
-            currentAudio.loop = true;
-            currentAudio.play().catch(() => { });
+            const audio = new Audio("assets/audios/jingle-bells.mp3");
+            audio.volume = 0.5;
+            audio.play().catch(() => { });
             songStarted = true;
-
-            document.getElementById("disable-music").style.display = "block";
         } catch { }
-    }
-
-    if (config.christmasTheme?.songEnabled && await getValue("christmas-music-disabled")) {
-        document.getElementById("disable-music").style.display = "block";
-        document.getElementById("disable-music").innerHTML = "Activate background music";
-    }
-
-    const disableMusicBtn = document.getElementById("disable-music");
-    if (disableMusicBtn) {
-        disableMusicBtn.addEventListener("click", async () => {
-            const isDisabled = await getValue("christmas-music-disabled");
-
-            if (isDisabled) {
-                // Reactivar música
-                try {
-                    currentAudio = new Audio("assets/audios/jingle-bells.mp3");
-                    currentAudio.volume = 0.5;
-                    currentAudio.loop = true;
-                    currentAudio.play().catch(() => { });
-                    await setValue("christmas-music-disabled", false);
-                    disableMusicBtn.innerHTML = "Disable background music";
-                } catch { }
-            } else {
-                // Desactivar música
-                try {
-                    if (currentAudio) {
-                        currentAudio.pause();
-                        currentAudio.currentTime = 0;
-                    }
-                    await setValue("christmas-music-disabled", true);
-                    disableMusicBtn.innerHTML = "Activate background music";
-                } catch { }
-            }
-        });
     }
 }
 
@@ -173,35 +134,33 @@ class LoadAPI {
             versions: `${this.paths.versions}.meta.json`,
             mojang: `${this.paths.mojangVersions}.meta.json`,
         };
+        this._langPromise = null;
     }
 
-    async getString(key) {
+    async lang() {
+        if (!this._langPromise) this._langPromise = new Lang().GetLang();
         try {
-            if (typeof window !== 'undefined' && window.stringLoader) {
-                return window.stringLoader.getString(`launcher.${key}`) || key;
-            }
+            return await this._langPromise;
         } catch (e) {
-            console.error("StringLoader error:", e);
+            console.error("Lang load error:", e);
+            return {
+                loading_config: "Cargando configuración...",
+                config_loaded: "Configuración cargada.",
+                error_loading_config: "Error cargando configuración.",
+                loading_versions: "Cargando versiones...",
+                versions_loaded: "Versiones cargadas.",
+                error_loading_versions: "Error cargando versiones.",
+                loading_minecraft_versions: "Cargando versiones de Minecraft...",
+                minecraft_versions_loaded: "Versiones de Minecraft cargadas.",
+                error_loading_minecraft_versions: "Error cargando versiones de Minecraft.",
+                starting_battly: "Iniciando Battly...",
+            };
         }
-
-        const fallbacks = {
-            loading_config: "Loading configuration...",
-            config_loaded: "Configuration loaded.",
-            error_loading_config: "Error loading configuration.",
-            loading_versions: "Loading versions...",
-            versions_loaded: "Versions loaded.",
-            error_loading_versions: "Error loading versions.",
-            loading_minecraft_versions: "Loading Minecraft versions...",
-            minecraft_versions_loaded: "Minecraft versions loaded.",
-            error_loading_minecraft_versions: "Error loading Minecraft versions.",
-            starting_battly: "Starting Battly...",
-        };
-        return fallbacks[key] || key;
     }
 
     async loadFile({ url, localPath, metaPath, loadingKey, successKey, errorKey, startup = false, applyUI = false }) {
-        const loadingText = await this.getString(loadingKey);
-        if (!startup) setLoadingText(loadingText || loadingKey);
+        const lang = await this.lang();
+        if (!startup) setLoadingText(lang[loadingKey] || loadingKey);
         let offlineMode = "false";
         try {
             offlineMode = String(await getValue("offline-mode"));
@@ -209,13 +168,11 @@ class LoadAPI {
         if (offlineMode === "true") {
             try {
                 const data = await readJSONSafe(localPath);
-                const successText = await this.getString(successKey);
-                if (!startup) setLoadingText(successText || successKey);
-                if (applyUI && url === CONFIG_URL) applyChristmasUI(data, { startup });
+                if (!startup) setLoadingText(lang[successKey] || successKey);
+                if (applyUI && url === CONFIG_URL) applyChristmasUI(data, { startup, lang });
                 return data;
             } catch (err) {
-                const errorText = await this.getString(errorKey);
-                if (!startup) setLoadingText(errorText || errorKey);
+                if (!startup) setLoadingText(lang[errorKey] || errorKey);
                 throw err;
             }
         }
@@ -230,10 +187,9 @@ class LoadAPI {
                 lastModified: res.headers["last-modified"] || meta.lastModified || null,
                 updatedAt: Date.now(),
             });
-            const successText = await this.getString(successKey);
-            if (!startup) setLoadingText(successText || successKey);
+            if (!startup) setLoadingText(lang[successKey] || successKey);
             if (applyUI && url === CONFIG_URL) {
-                applyChristmasUI(data, { startup });
+                applyChristmasUI(data, { startup, lang });
                 if (data?.christmasTheme?.songEnabled && !songPlayed) {
                     songPlayed = true;
                 }
@@ -243,19 +199,18 @@ class LoadAPI {
             console.warn("Fallo online, intentando offline:", networkErr?.message || networkErr);
             try {
                 const data = await readJSONSafe(localPath);
-                const errorText = await this.getString(errorKey);
-                if (!startup) setLoadingText(errorText || errorKey);
-                if (applyUI && url === CONFIG_URL) applyChristmasUI(data, { startup });
+                if (!startup) setLoadingText(lang[errorKey] || errorKey);
+                if (applyUI && url === CONFIG_URL) applyChristmasUI(data, { startup, lang });
                 return data;
             } catch (diskErr) {
-                const errorText = await this.getString(errorKey);
-                if (!startup) setLoadingText(errorText || errorKey);
+                if (!startup) setLoadingText(lang[errorKey] || errorKey);
                 throw diskErr;
             }
         }
     }
 
     async GetConfig(startup = false) {
+        const lang = await this.lang();
         return this.loadFile({
             url: CONFIG_URL,
             localPath: this.paths.config,
@@ -292,8 +247,8 @@ class LoadAPI {
             startup: false,
             applyUI: false,
         });
-        const startingText = await this.getString("starting_battly");
-        setTimeout(() => setLoadingText(startingText || "Starting Battly..."), 2000);
+        const lang = await this.lang();
+        setTimeout(() => setLoadingText(lang.starting_battly || "Starting Battly..."), 2000);
         return data;
     }
 }

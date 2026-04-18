@@ -1,10 +1,14 @@
+/**
+ * Helper de Analytics para Renderer Process
+ * Usa IPC para comunicarse con el proceso principal
+ */
+
 const { ipcRenderer } = require('electron');
 
 class AnalyticsHelper {
-    static logBuffer = [];
-    static isStreamingEnabled = false;
-    static maxBufferSize = 1000;
-
+    /**
+     * Trackear un evento
+     */
     static async track(eventType, properties = {}) {
         try {
             const result = await ipcRenderer.invoke('analytics-track', eventType, properties);
@@ -15,71 +19,17 @@ class AnalyticsHelper {
         }
     }
 
+    /**
+     * Enviar log
+     */
     static async log(level, message, context = {}) {
-        const logEntry = {
-            level,
-            message,
-            context,
-            timestamp: Date.now()
-        };
-
-        if (this.isStreamingEnabled) {
-            try {
-                const result = await ipcRenderer.invoke('analytics-log', level, message, context);
-                return result;
-            } catch (error) {
-                console.error('[AnalyticsHelper] Log error:', error);
-                return { success: false, error: error.message };
-            }
-        }
-
-        this.logBuffer.push(logEntry);
-
-        if (this.logBuffer.length > this.maxBufferSize) {
-            this.logBuffer.shift();
-        }
-
-        return { success: true, buffered: true };
-    }
-
-    static enableStreaming() {
-        console.log('[AnalyticsHelper] Streaming enabled');
-        this.isStreamingEnabled = true;
-        this.flushBuffer();
-    }
-
-    static disableStreaming() {
-        console.log('[AnalyticsHelper] Streaming disabled');
-        this.isStreamingEnabled = false;
-    }
-
-    static async flushBuffer() {
-        if (this.logBuffer.length === 0) {
-            return { success: true, sent: 0 };
-        }
-
-        console.log(`[AnalyticsHelper] Flushing ${this.logBuffer.length} logs...`);
-
-        const logsToSend = [...this.logBuffer];
-        this.logBuffer = [];
-
         try {
-            const result = await ipcRenderer.invoke('analytics-flush-logs', logsToSend);
-            console.log(`[AnalyticsHelper] ${logsToSend.length} logs sent`);
+            const result = await ipcRenderer.invoke('analytics-log', level, message, context);
             return result;
         } catch (error) {
-            console.error('[AnalyticsHelper] Flush error:', error);
-            this.logBuffer = [...logsToSend, ...this.logBuffer];
+            console.error('[AnalyticsHelper] Log error:', error);
             return { success: false, error: error.message };
         }
-    }
-
-    static isStreaming() {
-        return this.isStreamingEnabled;
-    }
-
-    static getBufferSize() {
-        return this.logBuffer.length;
     }
 
     // Eventos predefinidos (mismos que BattlyAnalytics.Events)

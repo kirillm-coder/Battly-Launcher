@@ -6,13 +6,13 @@ let dev = process.env.NODE_ENV === 'dev';
 const fs = require('fs');
 const fetch = require('node-fetch');
 const axios = require("axios");
+const { Lang } = require('./assets/js/utils/lang.js');
 const { getValue, setValue } = require('./assets/js/utils/storage');
 import { LoadAPI } from "./utils/loadAPI.js";
 
 require('./assets/js/libs/errorReporter');
-require('./assets/js/utils/stringLoader.js');
 
-let stringLoader = null;
+let lang = null;
 
 let splash_;
 let splashMessage;
@@ -26,7 +26,7 @@ class Splash {
 	}
 
 	async init() {
-		await this.LoadStrings();
+		await this.LoadLang();
 
 		if (document.readyState === "complete" || document.readyState === "interactive") {
 			splash_ = document.querySelector(".splash");
@@ -41,14 +41,13 @@ class Splash {
 		}
 	}
 
-	async LoadStrings() {
-		if (!stringLoader) {
+	async LoadLang() {
+		if (!lang) {
 			try {
-				await window.ensureStringLoader();
-				stringLoader = window.stringLoader;
-				console.log("Strings loaded successfully");
+				lang = await new Lang().GetLang();
+				console.log("Idioma cargado:", lang);
 			} catch (error) {
-				console.error("Error loading strings:", error);
+				console.error("Error cargando el idioma:", error);
 			}
 		}
 	}
@@ -69,7 +68,7 @@ class Splash {
 			"ar": "مرحبا!",
 		};
 
-		message.innerHTML = strings[stringLoader?.getCurrentLanguage() || "en"];
+		message.innerHTML = strings[await getValue("lang") ? await getValue("lang") : "it"];
 
 		let sonidoDB = await getValue("sonido-inicio") || "start";
 		let sonido_inicio = new Audio(`./assets/audios/${sonidoDB}.mp3`);
@@ -92,25 +91,16 @@ class Splash {
 
 		await sleep(1000);
 
-		// Verificar conectividad con timeout
-		const timeoutPromise = new Promise((_, reject) =>
-			setTimeout(() => reject(new Error('Connection timeout')), 5000)
-		);
-
-		Promise.race([
-			fetch("https://google.com"),
-			timeoutPromise
-		]).then(async () => {
+		fetch("https://google.com").then(async () => {
 			this.checkMaintenance();
 			await setValue("offline-mode", false);
-		}).catch(async (error) => {
-			console.warn("No connection or timeout:", error.message);
+		}).catch(async () => {
 			await setValue("offline-mode", true);
-			this.setStatus(stringLoader?.getString("launcher.checking_connection") || "Checking connection...");
+			this.setStatus(lang.checking_connection);
 			await sleep(1000);
-			this.setStatus(stringLoader?.getString("launcher.no_connection") || "No connection");
+			this.setStatus(lang.no_connection);
 			await sleep(1500);
-			this.setStatus(stringLoader?.getString("launcher.starting_battly") || "Starting Battly...");
+			this.setStatus(lang.starting_battly);
 			await sleep(500);
 			this.startBattly();
 		});
@@ -118,30 +108,18 @@ class Splash {
 
 	async checkMaintenance() {
 		try {
-			// Agregar timeout a la verificación de mantenimiento
-			const timeoutPromise = new Promise((_, reject) =>
-				setTimeout(() => reject(new Error('Maintenance check timeout')), 10000)
-			);
-
-			const res = await Promise.race([
-				new LoadAPI().GetConfig(true),
-				timeoutPromise
-			]);
+			const res = await new LoadAPI().GetConfig(true);
 
 			if (res.maintenance) return this.shutdown(res.maintenance_message);
-			this.setStatus(stringLoader?.getString("launcher.starting_launcher") || "Starting launcher...");
+			this.setStatus(lang.starting_launcher);
 			await sleep(500);
 			setTimeout(() => {
 				this.checkForUpdates();
 			}, 1000);
 			return true;
 		} catch (error) {
-			console.error("Error checking maintenance, starting in offline mode:", error);
-			// En lugar de cerrar el launcher, iniciarlo en modo offline
-			this.setStatus(stringLoader?.getString("launcher.offline_mode") || "Starting in offline mode...");
-			await sleep(1500);
-			this.checkForUpdates();
-			return false;
+			console.error(error);
+			return this.shutdown(lang.error_connecting_server);
 		}
 	}
 
@@ -149,17 +127,17 @@ class Splash {
 		splash_.classList.remove("translate");
 		splashMessage.classList.add("animate__animated", "animate__flipOutX");
 		splashAuthor.classList.add("animate__animated", "animate__flipOutX");
-		this.setStatus(stringLoader?.getString("launcher.ending") || "Closing...");
+		this.setStatus(lang.ending);
 		await sleep(500);
 		ipcRenderer.send('main-window-open');
 		ipcRenderer.send('update-window-close');
 	}
 
 	shutdown(text) {
-		this.setStatus(`${text}<br>${stringLoader?.getString("launcher.closing_countdown") || "Closing in"} 10s`);
+		this.setStatus(`${text}<br>${lang.closing_countdown} 10s`);
 		let i = 10;
 		setInterval(() => {
-			this.setStatus(`${text}<br>${stringLoader?.getString("launcher.closing_countdown") || "Closing in"} ${i}s`);
+			this.setStatus(`${text}<br>${lang.closing_countdown} ${i}s`);
 			if (i < 0) ipcRenderer.send('update-window-close');
 			i--;
 		}, 1000);
@@ -188,25 +166,25 @@ class Splash {
 			this.startBattly();
 		});
 
-		this.setStatus(stringLoader?.getString("launcher.checking_updates") || "Checking for updates...");
+		this.setStatus(lang.checking_updates);
 
 		ipcRenderer.invoke('update-app').then(err => {
 			if (err) {
 				if (err.error) {
 					let error = err.message;
 					error = error.toString().slice(0, 50);
-					this.shutdown(`${stringLoader?.getString("launcher.update_error") || "Update error"} <br> ${error}`);
+					this.shutdown(`${lang.update_error} <br> ${error}`);
 				}
 			}
 		})
 
 		ipcRenderer.on('updateAvailable', () => {
-			this.setStatus(stringLoader?.getString("launcher.update_available") || "Update available");
+			this.setStatus(lang.update_available);
 
 			let boton_actualizar = document.getElementById("btn_actualizar");
 			boton_actualizar.style.display = "block";
 			boton_actualizar.addEventListener("click", () => {
-				this.setStatus(stringLoader?.getString("launcher.downloading_update") || "Downloading update...");
+				this.setStatus(lang.downloading_update);
 				this.toggleProgress();
 				ipcRenderer.send('start-update');
 			})
@@ -214,13 +192,13 @@ class Splash {
 			let boton_cancelar = document.getElementById("btn_jugar");
 			boton_cancelar.style.display = "block";
 			boton_cancelar.addEventListener("click", () => {
-				this.setStatus(stringLoader?.getString("launcher.update_cancelled") || "Update cancelled");
+				this.setStatus(lang.update_cancelled);
 				this.checkMaintenance();
 			})
 		})
 
 		ipcRenderer.on('updateNewAvailable', () => {
-			this.setStatus(stringLoader?.getString("launcher.update_available") || "Update available");
+			this.setStatus(lang.update_available);
 
 			ipcRenderer.send('start-new-update');
 		})
@@ -234,7 +212,7 @@ class Splash {
 		})
 
 		ipcRenderer.on('update-downloaded', async () => {
-			this.setStatus(stringLoader?.getString("launcher.update_downloaded") || "Update downloaded");
+			this.setStatus(lang.update_downloaded);
 			await sleep(5000);
 			this.toggleProgress();
 			ipcRenderer.send('update-window-close');

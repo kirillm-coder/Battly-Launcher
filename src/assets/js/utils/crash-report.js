@@ -2,9 +2,14 @@ const { ipcRenderer } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { shell } = require("electron");
-require("./assets/js/utils/stringLoader.js");
+const { Lang } = require("./assets/js/utils/lang.js");
 const { getValue, setValue } = require('./assets/js/utils/storage');
-let lang = {};
+let lang;
+new Lang().GetLang().then(lang_ => {
+    lang = lang_;
+}).catch(error => {
+    console.error("Error:", error);
+});
 
 let showed;
 
@@ -12,13 +17,13 @@ class CrashReport {
     async ShowCrashReport(error) {
         if (showed) return;
         showed = true;
-        await window.ensureStringLoader?.();
+        lang = await new Lang().GetLang();
         let audioError = new Audio("./assets/audios/error.mp3");
         audioError.play();
 
         ipcRenderer.send("new-notification", {
-            title: window.stringLoader?.getString("common.notification_crash_report_title") || "Reporte de Error",
-            body: window.stringLoader?.getString("common.notification_crash_report_text") || "Ocurrió un error"
+            title: lang["notification_crash_report_title"],
+            body: lang["notification_crash_report_text"]
         });
 
         const modalDiv = document.createElement("div");
@@ -43,7 +48,7 @@ class CrashReport {
         const titleP = document.createElement("p");
         titleP.className = "modal-card-title";
         titleP.style.color = "#fff";
-        titleP.textContent = window.stringLoader?.getString("common.notification_crash_report_title") || "Error al abrir Minecraft";
+        titleP.textContent = "Error al abrir Minecraft";
         headerDiv.appendChild(titleP);
 
         const bodySection = document.createElement("section");
@@ -53,7 +58,7 @@ class CrashReport {
         modalCardDiv.appendChild(bodySection);
 
         const errorP = document.createElement("p");
-        errorP.textContent = window.stringLoader?.getString("crashReport.thatsAnError") || "Vaya, parece que ha ocurrido un error al intentar abrir Minecraft";
+        errorP.textContent = lang["thats_a_error_message"];
         bodySection.appendChild(errorP);
 
         const cardDiv = document.createElement("div");
@@ -66,7 +71,7 @@ class CrashReport {
 
         const cardTitleP = document.createElement("p");
         cardTitleP.className = "card-header-title";
-        cardTitleP.textContent = window.stringLoader?.getString("crashReport.errorFound") || "Error encontrado";
+        cardTitleP.textContent = lang["error_found"];
         cardHeaderDiv.appendChild(cardTitleP);
 
         const cardContentDiv = document.createElement("div");
@@ -89,7 +94,7 @@ class CrashReport {
 
         const closeButton = document.createElement("button");
         closeButton.className = "button is-danger";
-        closeButton.textContent = window.stringLoader?.getString("common.close") || "Cerrar";
+        closeButton.textContent = lang["close"];
         closeButton.addEventListener("click", () => {
             modalDiv.remove();
             showed = false;
@@ -127,7 +132,7 @@ class CrashReport {
             const paragraph = document.createElement("p");
             paragraph.style.color = "#fff";
             paragraph.style.fontSize = "20px";
-            paragraph.innerText = window.stringLoader?.getString("crashReport.searchingSolution") || "Buscando solución...";
+            paragraph.innerText = lang["searching_solution"];
 
             modalCardBody.appendChild(image);
             modalCardBody.appendChild(paragraph);
@@ -147,11 +152,11 @@ class CrashReport {
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        paragraph.innerHTML = `<span style='font-size: 16px;'>${window.stringLoader?.getString("crashReport.noSolutionFound") || "No se encontró solución"}</span>`;
+                        paragraph.innerHTML = `<span style='font-size: 16px;'>${lang["no_solution_found"]}</span>`;
 
                         const closeButton = document.createElement("button");
                         closeButton.className = "button is-danger";
-                        closeButton.textContent = window.stringLoader?.getString("common.close") || "Cerrar";
+                        closeButton.textContent = lang["close"];
 
                         closeButton.addEventListener("click", () => {
                             modal.remove();
@@ -160,11 +165,11 @@ class CrashReport {
                     }
 
                     if (data.status === 404) {
-                        paragraph.innerHTML = `<span style='font-size: 16px;'>${window.stringLoader?.getString("crashReport.noSolutionFound") || "No se encontró solución"}</span>`;
+                        paragraph.innerHTML = `<span style='font-size: 16px;'>${lang["no_solution_found"]}</span>`;
 
                         const closeButton = document.createElement("button");
                         closeButton.className = "button is-danger";
-                        closeButton.textContent = window.stringLoader?.getString("common.close") || "Cerrar";
+                        closeButton.textContent = lang["close"];
 
                         closeButton.addEventListener("click", () => {
                             modal.remove();
@@ -189,7 +194,7 @@ class CrashReport {
                             findedText.style.color = "#fff";
                             findedText.style.fontSize = "20px";
                             findedText.style.fontWeight = "700";
-                            findedText.innerText = window.stringLoader?.getString("crashReport.solutionFound") || "¡Solución encontrada!";
+                            findedText.innerText = lang["solution_found"];
 
                             modalCardBody.appendChild(finded);
                             modalCardBody.appendChild(findedText);
@@ -219,7 +224,7 @@ class CrashReport {
 
                                 const closeButton = document.createElement("button");
                                 closeButton.className = "button is-danger";
-                                closeButton.textContent = window.stringLoader?.getString("common.close") || "Cerrar";
+                                closeButton.textContent = lang["close"];
                                 closeButton.addEventListener("click", () => {
                                     modal.remove();
                                 });
@@ -243,23 +248,23 @@ class CrashReport {
 
             setTimeout(() => {
                 if (!solucionEncontrada) {
-                    paragraph.innerHTML += `<br><span style='font-size: 16px;'>${window.stringLoader?.getString("crashReport.searchingTaking1") || "Esto está tardando más de lo esperado..."}</span>`;
+                    paragraph.innerHTML += `<br><span style='font-size: 16px;'>${lang["searching_solution_taking_1"]}</span>`;
                 }
             }, 10000);
 
             setTimeout(() => {
                 if (!solucionEncontrada) {
-                    paragraph.innerHTML += `<br><span style='font-size: 16px;'>${window.stringLoader?.getString("crashReport.searchingTaking2") || "Por favor, espera un poco más..."}</span>`;
+                    paragraph.innerHTML += `<br><span style='font-size: 16px;'>${lang["searching_solution_taking_2"]}</span>`;
                 }
             }, 20000);
 
             setTimeout(() => {
                 if (!solucionEncontrada) {
-                    paragraph.innerHTML += `<br><br><span style='font-size: 16px;'>${window.stringLoader?.getString("crashReport.searchingTaking3") || "Parece que no hay solución disponible"}</span>`;
+                    paragraph.innerHTML += `<br><br><span style='font-size: 16px;'>${lang["searching_solution_taking_3"]}</span>`;
 
                     const closeButton = document.createElement("button");
                     closeButton.className = "button is-danger";
-                    closeButton.textContent = window.stringLoader?.getString("common.close") || "Cerrar";
+                    closeButton.textContent = lang["close"];
 
                     closeButton.addEventListener("click", () => {
                         modal.remove();
@@ -270,11 +275,11 @@ class CrashReport {
             }, 30000);
 
         });
-        checkSolution.innerHTML = '<span><i class="fa-solid fa-wand-magic-sparkles"></i> ' + (window.stringLoader?.getString("crashReport.findSolution") || "Buscar solución") + '</span>';
+        checkSolution.innerHTML = '<span><i class="fa-solid fa-wand-magic-sparkles"></i> ' + lang["find_solution"] + '</span>';
 
         const saveLogsButton = document.createElement("button");
         saveLogsButton.className = "button is-info";
-        saveLogsButton.textContent = window.stringLoader?.getString("crashReport.saveLogs") || "Guardar logs";
+        saveLogsButton.textContent = lang["save_logs"];
         saveLogsButton.addEventListener("click", () => {
             let logs = document.querySelector(".errores").value;
             let logsPath = path.join(__dirname, "logs.txt");

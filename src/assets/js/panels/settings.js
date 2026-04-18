@@ -31,7 +31,14 @@ import { Alert } from "../utils/alert.js";
 import { AskModal } from '../utils/askModal.js';
 const ModalAsk = new AskModal();
 
-require("./assets/js/utils/stringLoader.js");
+const { Lang } = require("./assets/js/utils/lang.js");
+const { StringLoader } = require("./assets/js/utils/stringLoader.js");
+let lang;
+new Lang().GetLang().then(lang_ => {
+  lang = lang_;
+}).catch(error => {
+  console.error("Error:", error);
+});
 class Settings {
   static id = "settings";
   async init(config) {
@@ -103,7 +110,7 @@ class Settings {
         localStorage.removeItem("background-video");
 
         new Alert().ShowAlert({
-          title: window.stringLoader?.getString("settings.background_set_successfully") || "Fondo establecido correctamente",
+          title: lang.background_set_successfully,
           icon: "success",
         });
       });
@@ -119,8 +126,8 @@ class Settings {
       let lang_ = document.getElementById("language-selector");
 
       new Alert().ShowAlert({
-        title: window.stringLoader?.getString("settings.changing_language") || "Cambiando idioma...",
-        text: window.stringLoader?.getString("settings.changing_language_text") || "Battly se reiniciará para aplicar el cambio",
+        title: lang.changing_language,
+        text: lang.changing_language_text,
         icon: "info",
       });
 
@@ -473,7 +480,7 @@ class Settings {
 
           document.getElementById(uuid ? uuid : uuid_).remove();
           new Alert().ShowAlert({
-            title: window.stringLoader?.getString("settings.account_deleted_successfully") || "Cuenta eliminada correctamente",
+            title: lang.account_deleted_successfully,
             icon: "success",
           });
 
@@ -916,7 +923,7 @@ class Settings {
     const javaPathStored =
       (typeof configClient === "string" && configClient) ||
       (configClient?.java_config?.java_path) ||
-      (window.stringLoader?.getString("settings.javaPathDidntSet") || "Java path not set");
+      (lang?.java_path_didnt_set || "");
 
     const javaPathInputTxt = document.getElementById("ruta-java-input");
     const javaPathInputFile = document.getElementById("java-path-input-file");
@@ -940,7 +947,7 @@ class Settings {
     });
 
     document.getElementById("java-path-reset").addEventListener("click", async () => {
-      if (javaPathInputTxt) javaPathInputTxt.value = window.stringLoader?.getString("settings.javaPathDidntSet") || "Ruta de java no establecida";
+      if (javaPathInputTxt) javaPathInputTxt.value = lang?.java_path_didnt_set || "Ruta de java no establecida";
       await setValue("java-path", "");
       new Alert().ShowAlert({ title: await window.getString("settings.javaPathResetSuccessfully"), icon: "success" });
     });
@@ -1328,7 +1335,7 @@ class Settings {
       }
 
       currentMajor = major;
-      const m = await ensureJavaModal();
+      const m = ensureJavaModal();
       if (!document.body.contains(m.root)) document.body.appendChild(m.root);
 
       m.version.textContent = `Java ${major}`;
@@ -1452,7 +1459,7 @@ class Settings {
         return;
       }
 
-      const m = await ensureJavaModal();
+      const m = ensureJavaModal();
       m.downloadBtn.disabled = true;
       m.warn.style.display = "block";
       m.progressWrap.style.display = "block";
@@ -1565,7 +1572,7 @@ class Settings {
           if (e.target.closest(".b-java-action")) return;
           const installed = card.dataset.installed === "true";
           if (installed) await selectVersion(major);
-          else await openModal(major);
+          else openModal(major);
         });
 
         btnUse?.addEventListener("click", async (e) => { e.stopPropagation(); await selectVersion(major); });
@@ -1575,7 +1582,7 @@ class Settings {
             new Alert().ShowAlert({ title: `Java ${major} ${await window.getString("settings.javaAlreadyInstalled")}`, icon: "info" });
             return;
           }
-          await openModal(major);
+          openModal(major);
         });
       }
     }
@@ -1583,7 +1590,7 @@ class Settings {
     clearBtn?.addEventListener("click", async () => {
       await setSelectedMajor("");
       await setValue("java-path", "");
-      if (javaPathInputTxt) javaPathInputTxt.value = window.stringLoader?.getString("settings.javaPathDidntSet") || "Ruta de java no establecida";
+      if (javaPathInputTxt) javaPathInputTxt.value = lang?.java_path_didnt_set || "Ruta de java no establecida";
       if (selectedBar) selectedBar.style.display = "none";
       new Alert().ShowAlert({ title: await window.getString("settings.javaSelectionCleared"), icon: "success" });
     });
@@ -1678,6 +1685,7 @@ class Settings {
 
   async newTheme() {
     const API = 'https://api.battlylauncher.com/api/themes';
+    const IMGUR_CLIENT_ID = '56b4c1812c2116a';
     const account = await this.database.getSelectedAccount();
     if (account.type !== "battly") return;
     const authToken = account?.token;
@@ -1820,18 +1828,6 @@ class Settings {
       bgInput.onchange = async () => {
         const file = bgInput.files[0];
         if (!file) return;
-
-        // Máximo de 8 MB
-        if (file.size > 8 * 1024 * 1024) {
-          ModalAsk.ask({
-            title: await window.getString("settings.fileTooLarge"),
-            text: await window.getString("settings.fileMaxSize8MB"),
-            icon: 'error',
-            confirmButtonText: await window.getString("settings.accept"),
-            confirmButtonColor: '#3085d6'
-          });
-          return;
-        }
 
         const isGifSelected = (file.type && file.type.toLowerCase() === 'image/gif') || /\.gif$/i.test(file.name || '');
 
@@ -2985,16 +2981,6 @@ class Settings {
       let modal = document.getElementById('profile-modal');
       if (modal) return modal;
 
-      const userData = await fetch(`https://battlylauncher.com/api/users/about/get/${encodeURIComponent(username)}`).then(res => res.json()).then(data => data.data).catch(() => ({}));
-
-      const creationDate = new Date(userData.creationDate);
-      const creationTimeString = creationDate.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-
-      const LOCALES = {
-        es: "es-ES",
-        en: "en-US"
-      }
-
       modal = document.createElement('div');
       modal.id = 'profile-modal';
       modal.className = 'modal is-active';
@@ -3015,7 +3001,7 @@ class Settings {
             </div>
             <div class="main-user-profile-right">
               <h1>${modal.dataset.username}</h1>
-              <h2>${userData.bio || 'Este usuario no tiene una biografía establecida.'}</h2>
+              <h2>CEO y desarrollador de Battly Launcher.</h2>
             </div>
           </div>
           <div class="main-user-secondary-profile">
@@ -3025,12 +3011,12 @@ class Settings {
                 <h2 class="user-secondary-info-desc">${modal.dataset.uuid}</h2>
                 <br>
                 <h1 class="user-secondary-info-title">${await window.getString("settings.accountCreationDate")}</h1>
-                <h2 class="user-secondary-info-desc">${creationDate.toLocaleDateString(LOCALES[await getValue("lang")] || "es", { year: "numeric", month: "long", day: "numeric" })} a las ${creationTimeString}</h2>
+                <h2 class="user-secondary-info-desc">${await window.getString("settings.accountCreatedOn")} <span id="creation-time"></span></h2>
               </div>
             </div>
           </div>
         </section>
-      </div> `;
+      </div>`;
       document.body.appendChild(modal);
 
       let skin_container = document.getElementById("skin_container");
@@ -3061,19 +3047,18 @@ class Settings {
         opened = !opened;
       });
 
-      const userBadge = userData.verification;
+      const userBadge = 'verified' ?? null;
       const userTitle = document.querySelector(".main-user-profile-right h1");
       if (userBadge) {
-        userTitle.innerHTML += `<div class="badge" style = "background-image: url('https://battlylauncher.com/assets/img/verified.webp');" >
-        <span class="button-span">
-          <h1><i class="fa-regular fa-circle-check"></i>Cuenta verificada</h1>
-          <h2>Esta cuenta está verificada por el team de Battly</h2>
-        </span>
-        </div> `;
-      }
+        if (userBadge === "verified") {
+          userTitle.innerHTML += `<div class="badge" style="background-image: url('./assets/img/verified.webp');">
+          <span class="button-span">
+            <h1><i class="fa-regular fa-circle-check"></i>Cuenta verificada</h1>
+            <h2>Esta cuenta está verificada por el team de Battly</h2>
+          </span>
+        </div>`;
+        }
 
-      if (userData.premium) {
-        userTitle.innerHTML += `<i class="fa-solid fa-fire" title="Usuario Premium" style="color: gold; font-size: 35px; transform: translateY(12px);"></i>`;
       }
 
       const close = () => modal.remove();
@@ -3156,276 +3141,276 @@ class Settings {
     const tourContainer = document.createElement('div');
     tourContainer.className = 'premium-tour-container';
     tourContainer.innerHTML = `
-        < style >
-        .premium - tour - container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100 %;
-        height: 100 %;
-        background: linear - gradient(135deg, #667eea 0 %, #764ba2 100 %);
-        z - index: 9999;
-        display: flex;
-        align - items: center;
-        justify - content: center;
-        font - family: 'Segoe UI', Tahoma, Geneva, Verdana, sans - serif;
-        overflow: hidden;
-      }
+      <style>
+        .premium-tour-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          overflow: hidden;
+        }
 
-        .tour - card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop - filter: blur(20px);
-        border - radius: 20px;
-        padding: 40px;
-        max - width: 600px;
-        width: 90 %;
-        text - align: center;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box - shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        transform: scale(0.8);
-        opacity: 0;
-        transition: all 0.5s cubic - bezier(0.175, 0.885, 0.32, 1.275);
-      }
+        .tour-card {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(20px);
+          border-radius: 20px;
+          padding: 40px;
+          max-width: 600px;
+          width: 90%;
+          text-align: center;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          transform: scale(0.8);
+          opacity: 0;
+          transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
 
-        .tour - card.active {
-        transform: scale(1);
-        opacity: 1;
-      }
+        .tour-card.active {
+          transform: scale(1);
+          opacity: 1;
+        }
 
-        .feature - icon {
-        font - size: 4rem;
-        margin - bottom: 20px;
-        display: block;
-        animation: pulse 2s infinite;
-      }
+        .feature-icon {
+          font-size: 4rem;
+          margin-bottom: 20px;
+          display: block;
+          animation: pulse 2s infinite;
+        }
 
-        .feature - title {
-        font - size: 2.5rem;
-        font - weight: 700;
-        color: #fff;
-        margin - bottom: 10px;
-        text - shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-      }
+        .feature-title {
+          font-size: 2.5rem;
+          font-weight: 700;
+          color: #fff;
+          margin-bottom: 10px;
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
 
-        .feature - subtitle {
-        font - size: 1.2rem;
-        color: rgba(255, 255, 255, 0.8);
-        margin - bottom: 20px;
-        font - weight: 300;
-      }
+        .feature-subtitle {
+          font-size: 1.2rem;
+          color: rgba(255, 255, 255, 0.8);
+          margin-bottom: 20px;
+          font-weight: 300;
+        }
 
-        .feature - description {
-        font - size: 1.1rem;
-        color: rgba(255, 255, 255, 0.9);
-        line - height: 1.6;
-        margin - bottom: 30px;
-      }
+        .feature-description {
+          font-size: 1.1rem;
+          color: rgba(255, 255, 255, 0.9);
+          line-height: 1.6;
+          margin-bottom: 30px;
+        }
 
-        .tour - progress {
-        display: flex;
-        justify - content: center;
-        gap: 10px;
-        margin - bottom: 30px;
-      }
+        .tour-progress {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          margin-bottom: 30px;
+        }
 
-        .progress - dot {
-        width: 12px;
-        height: 12px;
-        border - radius: 50 %;
-        background: rgba(255, 255, 255, 0.3);
-        transition: all 0.3s ease;
-        cursor: pointer;
-      }
+        .progress-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.3);
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
 
-        .progress - dot.active {
-        background: #fff;
-        transform: scale(1.2);
-        box - shadow: 0 0 15px rgba(255, 255, 255, 0.6);
-      }
+        .progress-dot.active {
+          background: #fff;
+          transform: scale(1.2);
+          box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+        }
 
-        .tour - navigation {
-        display: flex;
-        justify - content: space - between;
-        align - items: center;
-        gap: 20px;
-      }
+        .tour-navigation {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+        }
 
-        .nav - button {
-        padding: 12px 24px;
-        border: none;
-        border - radius: 25px;
-        font - size: 1rem;
-        font - weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
-        backdrop - filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-      }
+        .nav-button {
+          padding: 12px 24px;
+          border: none;
+          border-radius: 25px;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background: rgba(255, 255, 255, 0.2);
+          color: #fff;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
 
-        .nav - button:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
-        box - shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-      }
+        .nav-button:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
 
-        .nav - button:disabled {
-        opacity: 0.5;
-        cursor: not - allowed;
-        transform: none;
-      }
+        .nav-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+        }
 
-        .nav - button.primary {
-        background: linear - gradient(45deg, #ff6b6b, #ee5a24);
-        border: none;
-      }
+        .nav-button.primary {
+          background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+          border: none;
+        }
 
-        .nav - button.primary:hover {
-        background: linear - gradient(45deg, #ee5a24, #ff6b6b);
-      }
+        .nav-button.primary:hover {
+          background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+        }
 
-        .demo - area {
-        margin: 20px 0;
-        padding: 20px;
-        background: rgba(0, 0, 0, 0.2);
-        border - radius: 15px;
-        min - height: 100px;
-        display: flex;
-        align - items: center;
-        justify - content: center;
-      }
+        .demo-area {
+          margin: 20px 0;
+          padding: 20px;
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 15px;
+          min-height: 100px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
 
-        .background - demo {
-        width: 100 %;
-        height: 80px;
-        background: linear - gradient(45deg, #667eea, #764ba2);
-        border - radius: 10px;
-        position: relative;
-        overflow: hidden;
-      }
+        .background-demo {
+          width: 100%;
+          height: 80px;
+          background: linear-gradient(45deg, #667eea, #764ba2);
+          border-radius: 10px;
+          position: relative;
+          overflow: hidden;
+        }
 
-        .background - demo::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100 %;
-        width: 100 %;
-        height: 100 %;
-        background: linear - gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        animation: shine 2s infinite;
-      }
+        .background-demo::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+          animation: shine 2s infinite;
+        }
 
-        .skin - demo {
-        width: 80px;
-        height: 80px;
-        background: #8b4513;
-        border - radius: 10px;
-        position: relative;
-        margin: 0 auto;
-        box - shadow: 0 0 20px rgba(139, 69, 19, 0.5);
-      }
+        .skin-demo {
+          width: 80px;
+          height: 80px;
+          background: #8b4513;
+          border-radius: 10px;
+          position: relative;
+          margin: 0 auto;
+          box-shadow: 0 0 20px rgba(139, 69, 19, 0.5);
+        }
 
-        .skin - demo::after {
-        content: 'HD';
-        position: absolute;
-        top: -10px;
-        right: -10px;
-        background: #ff6b6b;
-        color: white;
-        padding: 2px 6px;
-        border - radius: 5px;
-        font - size: 0.8rem;
-        font - weight: bold;
-      }
+        .skin-demo::after {
+          content: 'HD';
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          background: #ff6b6b;
+          color: white;
+          padding: 2px 6px;
+          border-radius: 5px;
+          font-size: 0.8rem;
+          font-weight: bold;
+        }
 
-        .badge - demo {
-        font - size: 3rem;
-        animation: glow 2s ease -in -out infinite alternate;
-      }
+        .badge-demo {
+          font-size: 3rem;
+          animation: glow 2s ease-in-out infinite alternate;
+        }
 
-        .discord - demo {
-        display: flex;
-        align - items: center;
-        gap: 10px;
-        justify - content: center;
-      }
+        .discord-demo {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          justify-content: center;
+        }
 
-        .discord - logo {
-        width: 40px;
-        height: 40px;
-        background: #5865f2;
-        border - radius: 50 %;
-        display: flex;
-        align - items: center;
-        justify - content: center;
-        color: white;
-        font - weight: bold;
-      }
+        .discord-logo {
+          width: 40px;
+          height: 40px;
+          background: #5865f2;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+        }
 
-      @keyframes pulse {
-        0 %, 100 % { transform: scale(1); }
-        50 % { transform: scale(1.1); }
-      }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
 
-      @keyframes shine {
-        0 % { left: -100 %; }
-        100 % { left: 100 %; }
-      }
+        @keyframes shine {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
 
-      @keyframes glow {
-          from { text - shadow: 0 0 10px #fce38a, 0 0 20px #fce38a, 0 0 30px #fce38a; }
-          to { text - shadow: 0 0 20px #fce38a, 0 0 30px #fce38a, 0 0 40px #fce38a; }
-      }
+        @keyframes glow {
+          from { text-shadow: 0 0 10px #fce38a, 0 0 20px #fce38a, 0 0 30px #fce38a; }
+          to { text-shadow: 0 0 20px #fce38a, 0 0 30px #fce38a, 0 0 40px #fce38a; }
+        }
 
-      @keyframes fadeInUp {
+        @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
-      }
+        }
 
-      @keyframes fadeInLeft {
+        @keyframes fadeInLeft {
           from { opacity: 0; transform: translateX(-30px); }
           to { opacity: 1; transform: translateX(0); }
-      }
+        }
 
-      @keyframes fadeInRight {
+        @keyframes fadeInRight {
           from { opacity: 0; transform: translateX(30px); }
           to { opacity: 1; transform: translateX(0); }
-      }
+        }
 
-      @keyframes fadeInDown {
+        @keyframes fadeInDown {
           from { opacity: 0; transform: translateY(-30px); }
           to { opacity: 1; transform: translateY(0); }
-      }
+        }
 
-      @keyframes bounce {
-        0 %, 20 %, 53 %, 80 %, 100 % { transform: translate3d(0, 0, 0); }
-        40 %, 43 % { transform: translate3d(0, -30px, 0); }
-        70 % { transform: translate3d(0, -15px, 0); }
-        90 % { transform: translate3d(0, -4px, 0); }
-      }
-      </style >
+        @keyframes bounce {
+          0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+          40%, 43% { transform: translate3d(0,-30px,0); }
+          70% { transform: translate3d(0,-15px,0); }
+          90% { transform: translate3d(0,-4px,0); }
+        }
+      </style>
 
-        <div class="tour-card active">
-          <div class="tour-progress">
-            ${features.map((_, index) => `<div class="progress-dot ${index === 0 ? 'active' : ''}" data-step="${index}"></div>`).join('')}
-          </div>
-
-          <div class="feature-content">
-            <span class="feature-icon">${features[0].icon}</span>
-            <h1 class="feature-title">${features[0].title}</h1>
-            <h2 class="feature-subtitle">${features[0].subtitle}</h2>
-            <p class="feature-description">${features[0].description}</p>
-            <div class="demo-area" id="demo-area" style="display: none;"></div>
-          </div>
-
-          <div class="tour-navigation">
-            <button class="nav-button" id="prev-btn" disabled>Anterior</button>
-            <button class="nav-button" id="skip-btn">Saltar Tour</button>
-            <button class="nav-button primary" id="next-btn">Siguiente</button>
-          </div>
+      <div class="tour-card active">
+        <div class="tour-progress">
+          ${features.map((_, index) => `<div class="progress-dot ${index === 0 ? 'active' : ''}" data-step="${index}"></div>`).join('')}
         </div>
-      `;
+
+        <div class="feature-content">
+          <span class="feature-icon">${features[0].icon}</span>
+          <h1 class="feature-title">${features[0].title}</h1>
+          <h2 class="feature-subtitle">${features[0].subtitle}</h2>
+          <p class="feature-description">${features[0].description}</p>
+          <div class="demo-area" id="demo-area" style="display: none;"></div>
+        </div>
+
+        <div class="tour-navigation">
+          <button class="nav-button" id="prev-btn" disabled>Anterior</button>
+          <button class="nav-button" id="skip-btn">Saltar Tour</button>
+          <button class="nav-button primary" id="next-btn">Siguiente</button>
+        </div>
+      </div>
+    `;
 
     document.body.appendChild(tourContainer);
 
@@ -3470,7 +3455,7 @@ class Settings {
         tourCard.style.transform = 'scale(1)';
         tourCard.style.opacity = '1';
 
-        featureIcon.style.animation = `${feature.animation || 'pulse'} 1s ease - out`;
+        featureIcon.style.animation = `${feature.animation || 'pulse'} 1s ease-out`;
 
       }, 200);
     };
@@ -3578,7 +3563,6 @@ class Settings {
     const token = account.token || localStorage.getItem('battly_token');
     const username = account.name || localStorage.getItem('battly_username');
     const isPremium = account.premium || false;
-    currentProfile.isPremium = isPremium;
 
     elements.tabs = {
       border: document.getElementById('custom-tab-border'),
@@ -3960,7 +3944,7 @@ class Settings {
         const currentBgPreview = document.getElementById('current-bg-preview');
         const currentBgImg = document.getElementById('current-bg-img');
         if (currentBgPreview) currentBgPreview.style.display = 'block';
-        if (currentBgImg) currentBgImg.src = `${baseURL}${currentProfile.backgroundImage} `;
+        if (currentBgImg) currentBgImg.src = `${baseURL}${currentProfile.backgroundImage}`;
       }
     }
   }
@@ -3968,8 +3952,8 @@ class Settings {
   updatePreview(elements, currentProfile, baseURL) {
 
     if (currentProfile.borderColor && currentProfile.borderStyle && currentProfile.borderWidth) {
-      if (elements.previewCard) elements.previewCard.style.border = `${currentProfile.borderWidth}px ${currentProfile.borderStyle} ${currentProfile.borderColor} `;
-      if (elements.previewAvatar) elements.previewAvatar.style.border = `${currentProfile.borderWidth}px ${currentProfile.borderStyle} ${currentProfile.borderColor} `;
+      if (elements.previewCard) elements.previewCard.style.border = `${currentProfile.borderWidth}px ${currentProfile.borderStyle} ${currentProfile.borderColor}`;
+      if (elements.previewAvatar) elements.previewAvatar.style.border = `${currentProfile.borderWidth}px ${currentProfile.borderStyle} ${currentProfile.borderColor}`;
     }
 
     if (elements.previewUsername) elements.previewUsername.style.color = currentProfile.nameColor;
@@ -3986,7 +3970,7 @@ class Settings {
         bgUrl = currentProfile.backgroundImage;
       } else {
         if (currentProfile.backgroundImage.startsWith('/profile-backgrounds')) {
-          bgUrl = `${baseURL}${currentProfile.backgroundImage} `;
+          bgUrl = `${baseURL}${currentProfile.backgroundImage}`;
         } else {
           bgUrl = currentProfile.backgroundImage;
         }
@@ -4063,7 +4047,7 @@ class Settings {
         elements.bgImageInput.value = '';
 
         if (data.profile.backgroundImage) {
-          currentProfile.backgroundImage = `${baseURL}${data.profile.backgroundImage} `;
+          currentProfile.backgroundImage = `${baseURL}${data.profile.backgroundImage}`;
           document.getElementById('current-bg-preview').style.display = 'block';
           document.getElementById('current-bg-img').src = currentProfile.backgroundImage;
         }
@@ -4072,8 +4056,7 @@ class Settings {
         throw new Error(data.message || 'Error al guardar');
       }
     } catch (error) {
-      console.error('Error al guardar:');
-      console.error(error);
+      console.error('Error al guardar:', error);
       new Alert().ShowAlert({
         icon: 'error',
         title: 'Error al guardar',
@@ -4082,7 +4065,7 @@ class Settings {
     } finally {
       elements.saveBtn.disabled = false;
       const saveText = await window.getString('settings.save');
-      elements.saveBtn.innerHTML = `< i class="fa-solid fa-save" ></i > ${saveText} `;
+      elements.saveBtn.innerHTML = `<i class="fa-solid fa-save"></i> ${saveText}`;
     }
   }
 
