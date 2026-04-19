@@ -1,10 +1,4 @@
 "use strict";
-/**
- * This code is distributed under the CC-BY-NC 4.0 license:
- * https://creativecommons.org/licenses/by-nc/4.0/
- *
- * Original author: Luuxis
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 function CustomBuffer(existingBuffer = Buffer.alloc(48)) {
     let buffer = existingBuffer;
@@ -60,4 +54,3 @@ function CustomBuffer(existingBuffer = Buffer.alloc(48)) {
     };
 }
 exports.default = CustomBuffer;
-//# sourceMappingURL=buffer.js.map

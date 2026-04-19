@@ -1,20 +1,15 @@
 "use strict";
 /**
- * This code is distributed under the CC-BY-NC 4.0 license:
- * https://creativecommons.org/licenses/by-nc/4.0/
- *
- * Original author: Luuxis
+ * @author TECNO BROS
+ 
  */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = login;
-exports.refresh = refresh;
-exports.validate = validate;
-exports.signout = signout;
-exports.ChangeAuthApi = ChangeAuthApi;
+exports.ChangeAuthApi = exports.signout = exports.validate = exports.refresh = exports.login = void 0;
 const crypto_1 = __importDefault(require("crypto"));
+const node_fetch_1 = __importDefault(require("node-fetch"));
 let api_url = 'https://authserver.mojang.com';
 async function login(username, password) {
     let UUID = crypto_1.default.randomBytes(16).toString('hex');
@@ -31,7 +26,7 @@ async function login(username, password) {
             }
         };
     }
-    let message = await fetch(`${api_url}/authenticate`, {
+    let message = await (0, node_fetch_1.default)(`${api_url}/authenticate`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -64,8 +59,9 @@ async function login(username, password) {
     };
     return user;
 }
+exports.login = login;
 async function refresh(acc) {
-    let message = await fetch(`${api_url}/refresh`, {
+    let message = await (0, node_fetch_1.default)(`${api_url}/refresh`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -93,8 +89,9 @@ async function refresh(acc) {
     };
     return user;
 }
+exports.refresh = refresh;
 async function validate(acc) {
-    let message = await fetch(`${api_url}/validate`, {
+    let message = await (0, node_fetch_1.default)(`${api_url}/validate`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -111,8 +108,9 @@ async function validate(acc) {
         return false;
     }
 }
+exports.validate = validate;
 async function signout(acc) {
-    let message = await fetch(`${api_url}/invalidate`, {
+    let message = await (0, node_fetch_1.default)(`${api_url}/invalidate`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -129,7 +127,8 @@ async function signout(acc) {
         return false;
     }
 }
+exports.signout = signout;
 function ChangeAuthApi(url) {
     api_url = url;
 }
-//# sourceMappingURL=Mojang.js.map
+exports.ChangeAuthApi = ChangeAuthApi;
